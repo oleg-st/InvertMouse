@@ -3,13 +3,18 @@ Adds the ability to invert the mouse Y-axis in games that lack this feature, suc
 
 # Usage
 
-1. Install [Interception](https://github.com/oblitum/Interception) driver. Reboot.
+1. Install [Raw Accel](https://github.com/a1xd/rawaccel) or [Interception](https://github.com/oblitum/Interception) driver. Reboot.
 2. Run [InvertMouse](https://github.com/oleg-st/InvertMouse/releases/latest)
 
 # Requirements
-[Interception](https://github.com/oblitum/Interception) driver installed. .NET Framework 4+
+[Raw Accel](https://github.com/a1xd/rawaccel) or [Interception](https://github.com/oblitum/Interception) driver installed. .NET Framework 4+
 
 # How it works
 
-InvertMouse uses `Interception` driver and library to invert mouse Y-axis when cursor is hidden. 
+InvertMouse uses kernerl mode driver and library to invert mouse Y-axis when cursor is hidden. 
 This allows interactions in the menu (when cursor is visible) without inverted Y-axis.
+
+# Driver comparison
+Raw Accel is [Anti-Cheat Friendly](https://github.com/a1xd/rawaccel#anti-cheat-friendly). Raw Accel has a one second delay when changing settings.  
+Interception has no delay but can be detected by Vanguard and FaceIt.  
+[Read more](https://www.kovaak.com/mouse-acceleration/)
