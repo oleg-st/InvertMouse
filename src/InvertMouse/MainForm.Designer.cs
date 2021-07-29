@@ -40,23 +40,26 @@ namespace InvertMouse
             this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.restoreItem = new System.Windows.Forms.ToolStripMenuItem();
             this.closeItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.driverLabel = new System.Windows.Forms.Label();
+            this.driverComboBox = new System.Windows.Forms.ComboBox();
+            this.minimizeToTrayCB = new System.Windows.Forms.CheckBox();
             this.contextMenuStrip.SuspendLayout();
             this.SuspendLayout();
             // 
             // startStopBtn
             // 
-            this.startStopBtn.Location = new System.Drawing.Point(13, 43);
+            this.startStopBtn.Location = new System.Drawing.Point(13, 100);
             this.startStopBtn.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.startStopBtn.Name = "startStopBtn";
             this.startStopBtn.Size = new System.Drawing.Size(286, 57);
-            this.startStopBtn.TabIndex = 0;
+            this.startStopBtn.TabIndex = 2;
             this.startStopBtn.Text = "Start";
             this.startStopBtn.UseVisualStyleBackColor = true;
             this.startStopBtn.Click += new System.EventHandler(this.StartStopBtn_Click);
             // 
             // stateLabel
             // 
-            this.stateLabel.Location = new System.Drawing.Point(12, 9);
+            this.stateLabel.Location = new System.Drawing.Point(12, 74);
             this.stateLabel.Name = "stateLabel";
             this.stateLabel.Size = new System.Drawing.Size(287, 21);
             this.stateLabel.TabIndex = 1;
@@ -67,10 +70,10 @@ namespace InvertMouse
             this.cursorHiddenCB.AutoSize = true;
             this.cursorHiddenCB.Checked = true;
             this.cursorHiddenCB.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cursorHiddenCB.Location = new System.Drawing.Point(16, 115);
+            this.cursorHiddenCB.Location = new System.Drawing.Point(16, 172);
             this.cursorHiddenCB.Name = "cursorHiddenCB";
             this.cursorHiddenCB.Size = new System.Drawing.Size(185, 25);
-            this.cursorHiddenCB.TabIndex = 2;
+            this.cursorHiddenCB.TabIndex = 3;
             this.cursorHiddenCB.Text = "When cursor is hidden";
             this.cursorHiddenCB.UseVisualStyleBackColor = true;
             this.cursorHiddenCB.CheckedChanged += new System.EventHandler(this.OptionsChanged);
@@ -80,10 +83,10 @@ namespace InvertMouse
             this.yAxisCB.AutoSize = true;
             this.yAxisCB.Checked = true;
             this.yAxisCB.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.yAxisCB.Location = new System.Drawing.Point(16, 146);
+            this.yAxisCB.Location = new System.Drawing.Point(16, 203);
             this.yAxisCB.Name = "yAxisCB";
             this.yAxisCB.Size = new System.Drawing.Size(70, 25);
-            this.yAxisCB.TabIndex = 3;
+            this.yAxisCB.TabIndex = 4;
             this.yAxisCB.Text = "Y Axis";
             this.yAxisCB.UseVisualStyleBackColor = true;
             this.yAxisCB.CheckedChanged += new System.EventHandler(this.OptionsChanged);
@@ -91,10 +94,10 @@ namespace InvertMouse
             // xAxisCB
             // 
             this.xAxisCB.AutoSize = true;
-            this.xAxisCB.Location = new System.Drawing.Point(16, 177);
+            this.xAxisCB.Location = new System.Drawing.Point(16, 234);
             this.xAxisCB.Name = "xAxisCB";
             this.xAxisCB.Size = new System.Drawing.Size(70, 25);
-            this.xAxisCB.TabIndex = 4;
+            this.xAxisCB.TabIndex = 5;
             this.xAxisCB.Text = "X Axis";
             this.xAxisCB.UseVisualStyleBackColor = true;
             this.xAxisCB.CheckedChanged += new System.EventHandler(this.OptionsChanged);
@@ -128,11 +131,45 @@ namespace InvertMouse
             this.closeItem.Size = new System.Drawing.Size(113, 22);
             this.closeItem.Text = "Close";
             // 
+            // driverLabel
+            // 
+            this.driverLabel.Location = new System.Drawing.Point(12, 9);
+            this.driverLabel.Name = "driverLabel";
+            this.driverLabel.Size = new System.Drawing.Size(287, 21);
+            this.driverLabel.TabIndex = 5;
+            this.driverLabel.Text = "Driver";
+            // 
+            // driverComboBox
+            // 
+            this.driverComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.driverComboBox.FormattingEnabled = true;
+            this.driverComboBox.Items.AddRange(new object[] {
+            "Interception",
+            "RawAccel"});
+            this.driverComboBox.Location = new System.Drawing.Point(16, 33);
+            this.driverComboBox.Name = "driverComboBox";
+            this.driverComboBox.Size = new System.Drawing.Size(283, 29);
+            this.driverComboBox.TabIndex = 1;
+            this.driverComboBox.SelectedIndexChanged += new System.EventHandler(this.driverComboBox_SelectedIndexChanged);
+            // 
+            // minimizeToTrayCB
+            // 
+            this.minimizeToTrayCB.AutoSize = true;
+            this.minimizeToTrayCB.Location = new System.Drawing.Point(16, 265);
+            this.minimizeToTrayCB.Name = "minimizeToTrayCB";
+            this.minimizeToTrayCB.Size = new System.Drawing.Size(142, 25);
+            this.minimizeToTrayCB.TabIndex = 6;
+            this.minimizeToTrayCB.Text = "Minimize to tray";
+            this.minimizeToTrayCB.UseVisualStyleBackColor = true;
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 21F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(311, 213);
+            this.ClientSize = new System.Drawing.Size(311, 300);
+            this.Controls.Add(this.minimizeToTrayCB);
+            this.Controls.Add(this.driverComboBox);
+            this.Controls.Add(this.driverLabel);
             this.Controls.Add(this.xAxisCB);
             this.Controls.Add(this.yAxisCB);
             this.Controls.Add(this.cursorHiddenCB);
@@ -166,6 +203,9 @@ namespace InvertMouse
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip;
         private System.Windows.Forms.ToolStripMenuItem restoreItem;
         private System.Windows.Forms.ToolStripMenuItem closeItem;
+        private System.Windows.Forms.Label driverLabel;
+        private System.Windows.Forms.ComboBox driverComboBox;
+        private System.Windows.Forms.CheckBox minimizeToTrayCB;
     }
 }
 

@@ -2,16 +2,21 @@
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using InterceptionContext = System.IntPtr;
 using InterceptionDevice = System.Int32;
 using InterceptionFilter = System.UInt16;
-using InterceptionContext = System.IntPtr;
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMember.Local
 // ReSharper disable UnusedMember.Global
 
 namespace InvertMouse.Utils
 {
-    static class Interception
+    /*
+     * Interception library wrapper
+     *
+     * https://github.com/oblitum/Interception
+     */
+    static class InterceptionLib
     {
         private const string InterceptionLibrary = "interception";
 

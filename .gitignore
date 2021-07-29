@@ -1,4 +1,7 @@
 bin/
 obj/
 *.user
+*.filters
+*.DotSettings
 src/.vs
+src/RawAccel/wrapper/x64/
