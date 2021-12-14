@@ -1,5 +1,6 @@
 ﻿using InvertMouse.Utils;
 using System;
+using System.Linq;
 using System.Threading;
 
 namespace InvertMouse.Inverter
@@ -12,8 +13,9 @@ namespace InvertMouse.Inverter
     public class InvertMouseRawAccel : InvertMouseBase
     {
         private bool _xAxisActive, _yAxisActive;
-        // v1.4.4.0
-        private static readonly Version WrapperTarget = new Version(1, 4, 4, 0);
+
+        private Profile _profile;
+        private DriverConfig _driverConfig;
 
         public InvertMouseRawAccel()
         {
@@ -41,10 +43,17 @@ namespace InvertMouse.Inverter
 
         private void ApplyInvert(bool xAxis, bool yAxis)
         {
-            var activeSettings = DriverInterop.GetActiveSettings();
-            activeSettings.sensitivity.x = Math.Abs(activeSettings.sensitivity.x) * (xAxis ? -1 : 1);
-            activeSettings.sensitivity.y = Math.Abs(activeSettings.sensitivity.y) * (yAxis ? -1 : 1);
-            DriverInterop.Write(activeSettings);
+            if (_profile == null)
+            {
+                var activeDriverConfig = DriverConfig.GetActive();
+                _profile = activeDriverConfig.profiles.FirstOrDefault() ?? new Profile();
+                _driverConfig = DriverConfig.FromProfile(_profile);
+            }
+
+            _profile.sensitivity = Math.Abs(_profile.sensitivity) * (xAxis ? -1 : 1);
+            _profile.yxSensRatio = Math.Abs(_profile.yxSensRatio) * (yAxis != xAxis ? -1 : 1);
+            _driverConfig.SetProfileAt(0, _profile);
+            _driverConfig.Activate();
         }
 
         private void UpdateActive(bool active)
@@ -67,9 +76,9 @@ namespace InvertMouse.Inverter
             Error = "";
             try
             {
-                VersionHelper.ValidateAndGetDriverVersion(WrapperTarget);
+                VersionHelper.ValidOrThrow();
             }
-            catch (VersionException ex)
+            catch (InteropException ex)
             {
                 State = CheckState.DriverNotInstalled;
                 Error = ex.Message;
@@ -77,7 +86,7 @@ namespace InvertMouse.Inverter
             }
 
             State = CheckState.Ok;
-            Delay = DriverInterop.WriteDelayMs;
+            Delay = DriverConfig.WriteDelayMs;
         }
 
         public override void Stop()

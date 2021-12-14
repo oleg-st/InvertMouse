@@ -1,51 +1,51 @@
 #pragma once
 
-#include <type_traits>
-#include <msclr\marshal_cppstd.h>
+#include "interop-exception.h"
 
-#include <rawaccel.hpp>
-#include <rawaccel-version.h>
-#include <utility-rawinput.hpp>
-
-#include "wrapper_io.hpp"
+#include <rawaccel-io.hpp>
+#include <rawaccel-validate.hpp>
 
 using namespace System;
 using namespace System::Collections::Generic;
 using namespace System::Runtime::InteropServices;
 using namespace System::Reflection;
-
-using namespace Windows::Forms;
-
+using namespace System::Runtime::Serialization;
 using namespace Newtonsoft::Json;
+using namespace Newtonsoft::Json::Linq;
+
+namespace ra = rawaccel;
+
+ra::modifier_settings default_modifier_settings;
+ra::device_settings default_device_settings;
+
+public ref struct VersionHelper
+{
+    literal String^ VersionString = RA_VER_STRING;
+
+    static Version^ ValidOrThrow()
+    {
+        try {
+            ra::version_t v = ra::valid_version_or_throw();
+            return gcnew Version(v.major, v.minor, v.patch, 0);
+        }
+        catch (const ra::error& e) {
+            throw gcnew InteropException(e);
+        }
+    }
+};
 
 [JsonConverter(Converters::StringEnumConverter::typeid)]
 public enum class AccelMode
 {
-    linear, classic, natural, naturalgain, power, motivity, noaccel
+    classic, jump, natural, motivity, power, lut, noaccel
 };
 
-[JsonObject(ItemRequired = Required::Always)]
-[StructLayout(LayoutKind::Sequential)]
-public value struct AccelArgs
-{
-    double offset;
-    [MarshalAs(UnmanagedType::U1)]
-    bool legacyOffset;
-    double acceleration;
-    double scale;
-    double limit;
-    double exponent;
-    double midpoint;
-    double weight;
-    [JsonProperty("legacyCap")]
-    double scaleCap;
-    double gainCap;
-    [JsonProperty(Required = Required::Default)]
-    double speedCap;
+[JsonConverter(Converters::StringEnumConverter::typeid)]
+public enum class CapMode {
+    in_out, input, output
 };
 
 generic <typename T>
-[JsonObject(ItemRequired = Required::Always)]
 [StructLayout(LayoutKind::Sequential)]
 public value struct Vec2
 {
@@ -53,427 +53,683 @@ public value struct Vec2
     T y;
 };
 
-[JsonObject(ItemRequired = Required::Always)]
 [StructLayout(LayoutKind::Sequential)]
-public value struct DomainArgs
+public value struct AccelArgs
 {
-    Vec2<double> domainXY;
-    double lpNorm;
+    literal int MaxLutPoints = ra::LUT_POINTS_CAPACITY;
+
+    AccelMode mode;
+
+    [JsonProperty("Gain / Velocity")]
+    [MarshalAs(UnmanagedType::U1)]
+    bool gain;
+
+    double inputOffset;
+    double outputOffset;
+    double acceleration;
+    double decayRate;
+    double growthRate;
+    double motivity;
+    double exponentClassic;
+    double scale;
+    double exponentPower;
+    double limit;
+    double midpoint;
+    double smooth;
+
+    [JsonProperty("Cap / Jump")]
+    Vec2<double> cap;
+
+    [JsonProperty("Cap mode")]
+    CapMode capMode;
+
+    [JsonIgnore]
+    int length;
+
+    [MarshalAs(UnmanagedType::ByValArray, SizeConst = ra::LUT_RAW_DATA_CAPACITY)]
+    array<float>^ data;
+
+    [OnDeserialized]
+    void OnDeserializedMethod(StreamingContext context)
+    {
+        // data->Length must match SizeConst when marshalling
+        length = data->Length;
+        array<float>::Resize(data, ra::LUT_RAW_DATA_CAPACITY);
+    }
 };
 
 [JsonObject(ItemRequired = Required::Always)]
 [StructLayout(LayoutKind::Sequential, CharSet = CharSet::Unicode)]
-public ref struct DriverSettings
+public ref struct Profile
 {
-    literal String^ Key = "Driver settings";
+    [MarshalAs(UnmanagedType::ByValTStr, SizeConst = ra::MAX_NAME_LEN)]
+    System::String^ name;
+
+    [JsonProperty("Whole/combined accel (set false for 'by component' mode)")]
+    [MarshalAs(UnmanagedType::U1)]
+    bool combineMagnitudes;
+
+    double lpNorm;
+
+    [JsonProperty("Stretches domain for horizontal vs vertical inputs")]
+    Vec2<double> domainXY;
+    [JsonProperty("Stretches accel range for horizontal vs vertical inputs")]
+    Vec2<double> rangeXY;
+
+    [JsonProperty("Whole or horizontal accel parameters")]
+    AccelArgs argsX;
+    [JsonProperty("Vertical accel parameters")]
+    AccelArgs argsY;
+
+    [JsonProperty("Sensitivity multiplier")]
+    double sensitivity;
+    [JsonProperty("Y/X sensitivity ratio (vertical sens multiplier)")]
+    double yxSensRatio;
+    [JsonProperty("L/R sensitivity ratio (left sens multiplier)")]
+    double lrSensRatio;
+    [JsonProperty("U/D sensitivity ratio (up sens multiplier)")]
+    double udSensRatio;
 
     [JsonProperty("Degrees of rotation")]
     double rotation;
 
-    [JsonProperty("Degrees of angle snapping", Required = Required::Default)]
+    [JsonProperty("Degrees of angle snapping")]
     double snap;
 
-    [JsonProperty("Use x as whole/combined accel")]
+    [JsonIgnore]
+    double minimumSpeed;
+    [JsonProperty("Input Speed Cap")]
+    double maximumSpeed;
+
+    Profile(ra::profile& args)
+    {
+        Marshal::PtrToStructure(IntPtr(&args), this);
+    }
+
+    Profile() :
+        Profile(default_modifier_settings.prof) {}
+};
+
+[JsonObject(ItemRequired = Required::Always)]
+[StructLayout(LayoutKind::Sequential)]
+public value struct DeviceConfig {
     [MarshalAs(UnmanagedType::U1)]
-    bool combineMagnitudes;
+    bool disable;
 
-    [JsonProperty("Accel modes")]
-    Vec2<AccelMode> modes;
+    [MarshalAs(UnmanagedType::U1)]
+    [JsonProperty(Required = Required::Default)]
+    bool setExtraInfo;
 
-    [JsonProperty("Accel parameters")]
-    Vec2<AccelArgs> args;
+    [JsonProperty("DPI (normalizes sens to 1000dpi and converts input speed unit: counts/ms -> in/s)")]
+    int dpi;
 
-    [JsonProperty("Sensitivity multipliers")]
-    Vec2<double> sensitivity;
-
-    [JsonProperty("Negative directional multipliers", Required = Required::Default)]
-    Vec2<double> directionalMultipliers;
-
-    [JsonProperty("Stretches domain for horizontal vs vertical inputs", Required = Required::Default)]
-    DomainArgs domainArgs;
-
-    [JsonProperty("Stretches accel range for horizontal vs vertical inputs", Required = Required::Default)]
-    Vec2<double> rangeXY;
-
+    [JsonProperty("Polling rate Hz (keep at 0 for automatic adjustment)")]
+    int pollingRate;
+    
+    [ComponentModel::DefaultValue(ra::DEFAULT_TIME_MIN)]
     [JsonProperty(Required = Required::Default)]
     double minimumTime;
 
-    [JsonProperty("Device ID", Required = Required::Default)]
-    [MarshalAs(UnmanagedType::ByValTStr, SizeConst = MAX_DEV_ID_LEN)]
-    String^ deviceID = "";
+    [ComponentModel::DefaultValue(ra::DEFAULT_TIME_MAX)]
+    [JsonProperty(Required = Required::Default)]
+    double maximumTime;
 
-    bool ShouldSerializeminimumTime() 
-    { 
-        return minimumTime > 0 && minimumTime != DEFAULT_TIME_MIN;
+    bool ShouldSerializesetExtraInfo()
+    {
+        return setExtraInfo == true;
     }
 
-    DriverSettings() 
+    bool ShouldSerializeminimumTime()
     {
-        domainArgs = { { 1, 1 }, 2 };
-        rangeXY = { 1, 1 };
+        return minimumTime != ra::DEFAULT_TIME_MIN;
+    }
+
+    bool ShouldSerializemaximumTime()
+    {
+        return maximumTime != ra::DEFAULT_TIME_MAX;
+    }
+
+    void Init(const ra::device_config& cfg) 
+    {
+        disable = cfg.disable;
+        setExtraInfo = cfg.set_extra_info;
+        dpi = cfg.dpi;
+        pollingRate = cfg.polling_rate;
+        minimumTime = cfg.clamp.min;
+        maximumTime = cfg.clamp.max;
     }
 };
 
-
-template <typename NativeSettingsFunc>
-void as_native(DriverSettings^ managed_args, NativeSettingsFunc fn)
+[JsonObject(ItemRequired = Required::Always)]
+[StructLayout(LayoutKind::Sequential, CharSet = CharSet::Unicode)]
+public ref struct DeviceSettings
 {
-#ifndef NDEBUG
-    if (Marshal::SizeOf(managed_args) != sizeof(settings))
-        throw gcnew InvalidOperationException("setting sizes differ");
-#endif
-    settings args;
-    Marshal::StructureToPtr(managed_args, (IntPtr)&args, false);
-    fn(args);
-    if constexpr (!std::is_invocable_v<NativeSettingsFunc, const settings&>) {
-        Marshal::PtrToStructure((IntPtr)&args, managed_args);
-    }
-}
+    [MarshalAs(UnmanagedType::ByValTStr, SizeConst = ra::MAX_NAME_LEN)]
+    String^ name;
 
-DriverSettings^ get_default()
-{
-    DriverSettings^ managed = gcnew DriverSettings();
-    as_native(managed, [](settings& args) {
-        args = {};
-    });
-    return managed;
-}
+    [MarshalAs(UnmanagedType::ByValTStr, SizeConst = ra::MAX_NAME_LEN)]
+    String^ profile;
 
-void set_active(DriverSettings^ managed)
-{
-    as_native(managed, [](const settings& args) {
-        wrapper_io::writeToDriver(args);
-    });
-}
+    [MarshalAs(UnmanagedType::ByValTStr, SizeConst = ra::MAX_DEV_ID_LEN)]
+    String^ id;
 
-DriverSettings^ get_active()
-{
-    DriverSettings^ managed = gcnew DriverSettings();
-    as_native(managed, [](settings& args) {
-        wrapper_io::readFromDriver(args);
-    });
-    return managed;
-}
+    DeviceConfig config;
 
-void update_modifier(mouse_modifier& mod, DriverSettings^ managed, vec2<si_pair*> luts = {})
-{
-    as_native(managed, [&](const settings& args) {
-        mod = { args, luts };
-    });
-}
-
-using error_list_t = Collections::Generic::List<String^>;
-
-error_list_t^ get_accel_errors(AccelMode mode, AccelArgs^ args)
-{
-    accel_mode mode_native = (accel_mode)mode;
-
-    auto is_mode = [mode_native](auto... modes) {
-        return ((mode_native == modes) || ...);
-    };
-    
-    using am = accel_mode;
-
-    auto error_list = gcnew error_list_t();
-    
-    if (args->acceleration > 10 && is_mode(am::natural, am::naturalgain))
-        error_list->Add("acceleration can not be greater than 10");
-    else if (args->acceleration == 0 && is_mode(am::naturalgain))
-        error_list->Add("acceleration must be positive");
-    else if (args->acceleration < 0) {
-        bool additive = mode_native < am::power;
-        if (additive) error_list->Add("acceleration can not be negative, use a negative weight to compensate");
-        else error_list->Add("acceleration can not be negative");
-    }
-        
-    if (args->scale <= 0)
-        error_list->Add("scale must be positive");
-
-    if (args->exponent <= 1 && is_mode(am::classic))
-        error_list->Add("exponent must be greater than 1");
-    else if (args->exponent <= 0)
-        error_list->Add("exponent must be positive");
-
-    if (args->limit <= 1)
-        error_list->Add("limit must be greater than 1");
-
-    if (args->midpoint <= 0)
-        error_list->Add("midpoint must be positive");
-
-    if (args->offset < 0)
-        error_list->Add("offset can not be negative");
-
-    return error_list;
-}
-
-error_list_t^ get_other_errors(DriverSettings^ settings)
-{
-    auto error_list = gcnew error_list_t();
-
-    if (settings->rangeXY.x <= 0 || settings->rangeXY.y <= 0)
+    DeviceSettings(ra::device_settings& args)
     {
-        error_list->Add("range values must be positive");
+        Marshal::PtrToStructure(IntPtr(&args), this);
     }
 
-    if (settings->domainArgs.domainXY.x <= 0 || settings->domainArgs.domainXY.y <= 0)
-    {
-        error_list->Add("domain values must be positive");
-    }
+    DeviceSettings() :
+        DeviceSettings(default_device_settings) {}
+};
 
-    if (settings->domainArgs.lpNorm <= 0)
-    {
-        error_list->Add("lp norm must be positive");
-    }
-    
-    return error_list;
-}
 
-public ref class SettingsErrors
+public ref class ProfileErrors
 {
+    List<String^>^ tmp;
+    bool single;
+
+    delegate void MsgHandler(const char*);
+
+    void Add(const char* msg)
+    {
+        tmp->Add(gcnew String(msg));
+    }
+
 public:
-    error_list_t^ x;
-    error_list_t^ y;
-    error_list_t^ other;
+    ref struct SingleProfileErrors
+    {
+        Profile^ prof;
+        array<String^>^ messages;
+        int lastX;
+        int lastY;
+    };
+
+    List<SingleProfileErrors^>^ list;
+
+    ProfileErrors(List<Profile^>^ profiles)
+    {
+        single = profiles->Count == 1;
+        list = gcnew List<SingleProfileErrors^>();
+        tmp = gcnew List<String^>();
+        MsgHandler^ del = gcnew MsgHandler(this, &ProfileErrors::Add);
+        GCHandle gch = GCHandle::Alloc(del);
+        auto fp = static_cast<void (*)(const char*)>(
+            Marshal::GetFunctionPointerForDelegate(del).ToPointer());
+        ra::profile* native_ptr = new ra::profile();
+
+        for each (auto prof in profiles) {
+            Marshal::StructureToPtr(prof, IntPtr(native_ptr), false);
+            auto [last_x, last_y, _] = ra::valid(*native_ptr, fp);
+
+            if (tmp->Count != 0) {
+                auto singleErrors = gcnew SingleProfileErrors();
+                singleErrors->messages = tmp->ToArray();
+                singleErrors->lastX = last_x;
+                singleErrors->lastY = last_y;
+                singleErrors->prof = prof;
+                list->Add(singleErrors);
+                tmp->Clear();
+            }
+        }
+
+        tmp = nullptr;
+        gch.Free();
+        delete native_ptr;
+    }
 
     bool Empty()
     {
-        return (x == nullptr || x->Count == 0) && 
-            (y == nullptr || y->Count == 0) &&
-            (other == nullptr || other->Count == 0);
+        return list->Count == 0;
     }
 
-    virtual String^ ToString() override 
+    virtual String^ ToString() override
     {
-        if (x == nullptr) throw;
-
         Text::StringBuilder^ sb = gcnew Text::StringBuilder();
 
-        if (y == nullptr) // assume combineMagnitudes
-        {
-            for each (String^ str in x)
-            {
-                sb->AppendLine(str);
+        for each (auto elem in list) {
+            if (!single) {
+                sb->AppendFormat("profile: {0}\n", elem->prof->name);
             }
-        }
-        else
-        {
-            for each (String^ str in x)
-            {
-                sb->AppendFormat("x: {0}\n", str);
+
+            auto msgs = elem->messages;
+            if (elem->prof->combineMagnitudes) {
+                for (int i = 0; i < elem->lastX; i++) {
+                    sb->AppendFormat("\t{0}\n", msgs[i]);
+                }
             }
-            for each (String^ str in y)
-            {
-                sb->AppendFormat("y: {0}\n", str);
+            else {
+                for (int i = 0; i < elem->lastX; i++) {
+                    sb->AppendFormat("\tx: {0}\n", msgs[i]);
+                }
+                for (int i = elem->lastX; i < elem->lastY; i++) {
+                    sb->AppendFormat("\ty: {0}\n", msgs[i]);
+                }
+            }
+
+            for (int i = elem->lastY; i < msgs->Length; i++) {
+                sb->AppendFormat("\t{0}\n", msgs[i]);
             }
         }
 
-        for each (String ^ str in other)
-        {
-			sb->AppendLine(str);
-        }
-        
         return sb->ToString();
     }
 };
 
-public ref struct RawInputInterop
+public ref class DeviceErrors
 {
-    static void AddHandlesFromID(String^ deviceID, List<IntPtr>^ rawInputHandles)
-    {
-        try
-        {
-            std::vector<HANDLE> nativeHandles = rawinput_handles_from_dev_id(
-                msclr::interop::marshal_as<std::wstring>(deviceID));
+    List<String^>^ tmp;
+    bool single;
 
-            for (auto nh : nativeHandles) rawInputHandles->Add(IntPtr(nh));
-        }
-        catch (const std::exception& e)
-        {
-            throw gcnew System::Exception(gcnew String(e.what()));
-        }
+    delegate void MsgHandler(const char*);
+
+    void Add(const char* msg)
+    {
+        tmp->Add(gcnew String(msg));
     }
 
-    static List<String^>^ GetDeviceIDs()
+public:
+    ref struct SingleDeviceErrors
     {
-        try
-        {
-            auto managed = gcnew List<String^>();
+        DeviceSettings^ settings;
+        array<String^>^ messages;
+    };
 
-            for (auto&& id : rawinput_dev_id_list())
-            {
-                managed->Add(msclr::interop::marshal_as<String^>(id));
+    List<SingleDeviceErrors^>^ list;
+
+    DeviceErrors(List<DeviceSettings^>^ devSettings)
+    {
+        single = devSettings->Count == 1;
+        list = gcnew List<SingleDeviceErrors^>();
+        tmp = gcnew List<String^>();
+        MsgHandler^ del = gcnew MsgHandler(this, &DeviceErrors::Add);
+        GCHandle gch = GCHandle::Alloc(del);
+        auto fp = static_cast<void (*)(const char*)>(
+            Marshal::GetFunctionPointerForDelegate(del).ToPointer());
+        ra::device_settings* native_ptr = new ra::device_settings();
+
+        for each (auto dev in devSettings) {
+            Marshal::StructureToPtr(dev, IntPtr(native_ptr), false);
+            ra::valid(*native_ptr, fp);
+
+            if (tmp->Count != 0) {
+                auto singleErrors = gcnew SingleDeviceErrors();
+                singleErrors->messages = tmp->ToArray();
+                singleErrors->settings = dev;
+                list->Add(singleErrors);
+                tmp->Clear();
+            }
+        }
+
+        tmp = nullptr;
+        gch.Free();
+        delete native_ptr;
+    }
+
+    bool Empty()
+    {
+        return list->Count == 0;
+    }
+
+    virtual String^ ToString() override
+    {
+        Text::StringBuilder^ sb = gcnew Text::StringBuilder();
+
+        for each (auto elem in list) {
+            if (!single) {
+                sb->AppendFormat("device: {0}\n", elem->settings->id);
+                if (!String::IsNullOrWhiteSpace(elem->settings->name)) {
+                    sb->AppendFormat("  name: {0}\n", elem->settings->name);
+                }
             }
 
-            return managed;
+            for each (auto msg in elem->messages) {
+                sb->AppendFormat("\tx: {0}\n", msg);
+            }
         }
-        catch (const std::exception& e)
-        {
-            throw gcnew System::Exception(gcnew String(e.what()));
-        }
-    }
 
+        return sb->ToString();
+    }
 };
 
-public ref struct DriverInterop
-{
-    literal double WriteDelayMs = WRITE_DELAY;
-    static initonly DriverSettings^ DefaultSettings = get_default();
+struct accel_instance_t {
+    ra::modifier mod;
+    ra::modifier_settings settings;
 
-    static DriverSettings^ GetActiveSettings()
+    accel_instance_t() = default;
+
+    accel_instance_t(ra::modifier_settings& args) :
+        settings(args),
+        mod(args) {}
+
+    void init(Profile^ args)
     {
-        return get_active();
-    }
-
-    static void Write(DriverSettings^ args)
-    {
-        set_active(args);
-    }
-
-    static DriverSettings^ GetDefaultSettings()
-    {
-        return get_default();
-    }
-
-    static SettingsErrors^ GetSettingsErrors(DriverSettings^ args)
-    {
-        auto errors = gcnew SettingsErrors();
-
-        errors->x = get_accel_errors(args->modes.x, args->args.x);
-
-        if (!args->combineMagnitudes) {
-            errors->y = get_accel_errors(args->modes.y, args->args.y);
-        }
-
-        errors->other = get_other_errors(args);
-
-        return errors;
-    }
-
-
-
-    static error_list_t^ GetAccelErrors(AccelMode mode, AccelArgs^ args)
-    {
-        return get_accel_errors(mode, args);
+        Marshal::StructureToPtr(args, IntPtr(&settings.prof), false);
+        ra::init_data(settings);
+        mod = { settings };
     }
 };
 
 public ref class ManagedAccel
 {
-    mouse_modifier* const modifier_instance = new mouse_modifier();
-#ifdef RA_LOOKUP
-    si_pair* const lut_x = new si_pair[LUT_SIZE];
-    si_pair* const lut_y = new si_pair[LUT_SIZE];
-#else
-    si_pair* lut_x = nullptr;
-    si_pair* lut_y = nullptr;
-#endif
-
+    accel_instance_t* const instance = new accel_instance_t();
 public:
+
+    ManagedAccel() {}
+
+    ManagedAccel(ra::modifier_settings& settings) : 
+        instance(new accel_instance_t(settings)) {}
+
+    ManagedAccel(Profile^ settings)
+    {
+        Settings = settings;
+    }
 
     virtual ~ManagedAccel()
     {
-        delete modifier_instance;
-        delete[] lut_x;
-        delete[] lut_y;
+        delete instance;
     }
 
     !ManagedAccel()
     {
-        delete modifier_instance;
-        delete[] lut_x;
-        delete[] lut_y;
+        delete instance;
     }
 
-    Tuple<double, double>^ Accelerate(int x, int y, double time)
+    Tuple<double, double>^ Accelerate(int x, int y, double dpi_factor, double time)
     {
         vec2d in_out_vec = {
             (double)x,
             (double)y
         };
-        modifier_instance->modify(in_out_vec, time);
+
+        instance->mod.modify(in_out_vec, instance->settings, dpi_factor, time);
 
         return gcnew Tuple<double, double>(in_out_vec.x, in_out_vec.y);
     }
 
-    void UpdateFromSettings(DriverSettings^ args)
+    property Profile^ Settings
     {
-        update_modifier(
-            *modifier_instance, 
-            args, 
-            vec2<si_pair*>{ lut_x, lut_y }
-        );
-    }
-
-    static ManagedAccel^ GetActiveAccel()
-    {
-        settings args;
-        wrapper_io::readFromDriver(args);
-
-        auto active = gcnew ManagedAccel();
-        *active->modifier_instance = { 
-            args
-            , vec2<si_pair*> { active->lut_x, active->lut_y }
-        };
-        return active;
-    }
-};
-
-public ref struct RawAccelVersion
-{
-    literal String^ value = RA_VER_STRING;
-};
-
-public ref struct VersionException : public Exception 
-{
-public:
-    VersionException() {}
-    VersionException(String^ what) : Exception(what) {}
-};
-
-Version^ convert(rawaccel::version_t v)
-{
-    return gcnew Version(v.major, v.minor, v.patch, 0);
-}
-
-public ref struct VersionHelper
-{
-
-    static Version^ ValidateAndGetDriverVersion(Version^ wrapperTarget)
-    {
-        Version^ wrapperActual = VersionHelper::typeid->Assembly->GetName()->Version;
-
-        if (wrapperTarget != wrapperActual) {
-            throw gcnew VersionException("version mismatch, expected wrapper.dll v" + wrapperActual);
+        Profile^ get()
+        {
+            return gcnew Profile(instance->settings.prof);
         }
 
-        version_t drv_ver;
+        void set(Profile^ val)
+        {
+            instance->init(val);
+        }
+
+    }
+
+    ra::modifier_settings NativeSettings()
+    {
+        return instance->settings;
+    }
+
+};
+
+
+[JsonObject(ItemRequired = Required::Always)]
+public ref class DriverConfig {
+public:
+    literal double WriteDelayMs = ra::WRITE_DELAY;
+    literal String^ Key = "Driver settings";
+
+    String^ version = RA_VER_STRING;
+
+    DeviceConfig defaultDeviceConfig;
+
+    List<Profile^>^ profiles;
+
+    [NonSerialized]
+    List<ManagedAccel^>^ accels;
+
+    List<DeviceSettings^>^ devices;
+
+    void Activate()
+    {
+        if (accels->Count != profiles->Count) {
+            throw gcnew Exception("Profile count does not match ManagedAccel");
+        }
+
+        std::byte* buffer;
+
+        auto modifier_data_bytes = accels->Count * sizeof(ra::modifier_settings);
+        auto device_data_bytes = devices->Count * sizeof(ra::device_settings);
 
         try {
-            wrapper_io::getDriverVersion(drv_ver);
+            buffer = new std::byte[sizeof(ra::io_base) + modifier_data_bytes + device_data_bytes];
         }
-        catch (DriverNotInstalledException^ ex) {
-            throw gcnew VersionException(ex->Message);
-        }
-        catch (DriverIOException^) {
-            // Assume version ioctl is unimplemented (driver version < v1.3.0)
-            throw gcnew VersionException("driver version is out of date\n\nrun installer.exe to reinstall");
+        catch (const std::exception& e) {
+            throw gcnew InteropException(e);
         }
 
-        Version^ drv_ver_managed = convert(drv_ver);
+        auto* byte_ptr = buffer;
 
-        if (drv_ver_managed < convert(min_driver_version)) {
-            throw gcnew VersionException(
-                String::Format("driver version is out of date (v{0})\n\nrun installer.exe to reinstall", 
-                    drv_ver_managed));
+        auto* base_data = reinterpret_cast<ra::io_base*>(byte_ptr);
+        base_data->default_dev_cfg.disable = defaultDeviceConfig.disable;
+        base_data->default_dev_cfg.set_extra_info = defaultDeviceConfig.setExtraInfo;
+        base_data->default_dev_cfg.dpi = defaultDeviceConfig.dpi;
+        base_data->default_dev_cfg.polling_rate = defaultDeviceConfig.pollingRate;
+        base_data->default_dev_cfg.clamp.min = defaultDeviceConfig.minimumTime;
+        base_data->default_dev_cfg.clamp.max = defaultDeviceConfig.maximumTime;
+        base_data->modifier_data_size = accels->Count;
+        base_data->device_data_size = devices->Count;
+
+        byte_ptr += sizeof(ra::io_base);
+
+        auto* modifier_data = reinterpret_cast<ra::modifier_settings*>(byte_ptr);
+        for (auto i = 0; i < accels->Count; i++) {
+            auto& mod_settings = modifier_data[i];
+            mod_settings = accels[i]->NativeSettings();
         }
-        else if (drv_ver_managed > wrapperActual) {
-            throw gcnew VersionException(
-                String::Format("newer driver version is installed (v{0})",
-                    drv_ver_managed));
+
+        byte_ptr += modifier_data_bytes;
+
+        auto* device_data = reinterpret_cast<ra::device_settings*>(byte_ptr);
+        for (auto i = 0; i < devices->Count; i++) {
+            auto& dev_settings = device_data[i];
+            Marshal::StructureToPtr(devices[i], IntPtr(&dev_settings), false);
+        }
+
+        try {
+            ra::write(buffer);
+            delete[] buffer;
+        }
+        catch (const std::exception& e) {
+            delete[] buffer;
+            throw gcnew InteropException(e);
+        }
+    }
+    
+    void SetProfileAt(int index, Profile^ val)
+    {
+        profiles[index] = val;
+        accels[index]->Settings = val;
+    }
+
+    // returns null or a joined list of error messages
+    String^ Errors()
+    {
+        Text::StringBuilder^ sb = gcnew Text::StringBuilder();
+
+        ProfileErrors^ profErrors = gcnew ProfileErrors(profiles);
+        if (!profErrors->Empty()) {
+            sb->Append(profErrors->ToString());
+        }
+
+        DeviceSettings^ defaultDev = gcnew DeviceSettings();
+        defaultDev->config = defaultDeviceConfig;
+        defaultDev->id = "Default";
+        devices->Add(defaultDev);
+
+        DeviceErrors^ devErrors = gcnew DeviceErrors(devices);
+        if (!devErrors->Empty()) {
+            sb->Append(profErrors->ToString());
+        }
+
+        devices->RemoveAt(devices->Count - 1);
+
+        if (sb->Length == 0) {
+            return nullptr;
         }
         else {
-            return drv_ver_managed;
+            return sb->ToString();
         }
     }
 
+    JObject^ ToJObject()
+    {
+        auto dataQueue = gcnew Queue<array<float>^>();
+        auto empty = Array::Empty<float>();
+
+        for each (auto prof in profiles) {
+            if (prof->argsX.mode == AccelMode::lut) {
+                // data->Length is fixed for interop, 
+                // temporary resize avoids serializing a bunch of zeros
+                Array::Resize(prof->argsX.data, prof->argsX.length);
+            }
+            else {
+                // table data may be used internally in any mode, 
+                // so hide it when it's not needed for deserialization 
+                dataQueue->Enqueue(prof->argsX.data);
+                prof->argsX.data = empty;
+            }
+
+            if (prof->argsY.mode == AccelMode::lut) {
+                Array::Resize(prof->argsY.data, prof->argsY.length);
+            }
+            else {
+                dataQueue->Enqueue(prof->argsY.data);
+                prof->argsY.data = empty;
+            }
+        }
+
+        JObject^ jObject = JObject::FromObject(this);
+        String^ capModes = String::Join(" | ", Enum::GetNames(CapMode::typeid));
+        String^ accelModes = String::Join(" | ", Enum::GetNames(AccelMode::typeid));
+        jObject->AddFirst(gcnew JProperty("### Cap modes ###", capModes));
+        jObject->AddFirst(gcnew JProperty("### Accel modes ###", accelModes));
+
+        for each (auto prof in profiles) {
+            if (prof->argsX.mode == AccelMode::lut) {
+                Array::Resize(prof->argsX.data, ra::LUT_RAW_DATA_CAPACITY);
+            }
+            else {
+                prof->argsX.data = dataQueue->Dequeue();
+            }
+
+            if (prof->argsY.mode == AccelMode::lut) {
+                Array::Resize(prof->argsY.data, ra::LUT_RAW_DATA_CAPACITY);
+            }
+            else {
+                prof->argsY.data = dataQueue->Dequeue();
+            }
+        }
+
+        return jObject;
+    }
+
+    String^ ToJSON()
+    {
+        return ToJObject()->ToString();
+    }
+
+    // returns (config, null) or (null, error message)
+    static Tuple<DriverConfig^, String^>^ Convert(String^ json)
+    {
+        auto jss = gcnew JsonSerializerSettings();
+        jss->DefaultValueHandling = DefaultValueHandling::Populate;
+        auto cfg = JsonConvert::DeserializeObject<DriverConfig^>(json, jss);
+        if (cfg == nullptr) throw gcnew JsonException("invalid JSON");
+
+        auto message = cfg->Errors();
+        if (message != nullptr) {
+            return gcnew Tuple<DriverConfig^, String^>(nullptr, message);
+        }
+        else {
+            cfg->accels = gcnew List<ManagedAccel^>();
+
+            if (cfg->profiles->Count == 0) {
+                cfg->profiles->Add(gcnew Profile());
+            }
+
+            for each (auto prof in cfg->profiles) {
+                cfg->accels->Add(gcnew ManagedAccel(prof));
+            }
+            return gcnew Tuple<DriverConfig^, String^>(cfg, nullptr);
+        }
+    }
+
+    static DriverConfig^ GetActive()
+    {
+        std::unique_ptr<std::byte[]> bytes;
+        try {
+            bytes = ra::read();
+        }
+        catch (const std::exception& e) {
+            throw gcnew InteropException(e);
+        } 
+
+        auto cfg = gcnew DriverConfig();
+        cfg->profiles = gcnew List<Profile^>();
+        cfg->accels = gcnew List<ManagedAccel^>();
+        cfg->devices = gcnew List<DeviceSettings^>();
+
+        auto* byte_ptr = bytes.get();
+        ra::io_base* base_data = reinterpret_cast<ra::io_base*>(byte_ptr);
+        cfg->defaultDeviceConfig.Init(base_data->default_dev_cfg);
+
+        byte_ptr += sizeof(ra::io_base);
+
+        ra::modifier_settings* modifier_data = reinterpret_cast<ra::modifier_settings*>(byte_ptr);
+        for (auto i = 0u; i < base_data->modifier_data_size; i++) {
+            auto& mod_settings = modifier_data[i];
+            cfg->profiles->Add(gcnew Profile(mod_settings.prof));
+            cfg->accels->Add(gcnew ManagedAccel(mod_settings));
+        }
+
+        byte_ptr += base_data->modifier_data_size * sizeof(ra::modifier_settings);
+
+        ra::device_settings* device_data = reinterpret_cast<ra::device_settings*>(byte_ptr);
+        for (auto i = 0u; i < base_data->device_data_size; i++) {
+            auto& dev_settings = device_data[i];
+            cfg->devices->Add(gcnew DeviceSettings(dev_settings));
+        }
+
+        return cfg;
+    }
+
+    static DriverConfig^ FromProfile(Profile^ prof)
+    {
+        auto cfg = gcnew DriverConfig();
+        cfg->profiles = gcnew List<Profile^>();
+        cfg->accels = gcnew List<ManagedAccel^>();
+        cfg->devices = gcnew List<DeviceSettings^>();
+
+        cfg->profiles->Add(prof);
+        cfg->accels->Add(gcnew ManagedAccel(prof));
+        cfg->defaultDeviceConfig.Init(default_device_settings.config);
+        return cfg;
+    }
+
+    static DriverConfig^ GetDefault()
+    {
+        return FromProfile(gcnew Profile());
+    }
+
+    static void Deactivate() 
+    {
+        try {
+            ra::reset();
+        }
+        catch (const std::exception& e) {
+            throw gcnew InteropException(e);
+        }
+    }
+
+private: 
+    DriverConfig() {}
 };
+

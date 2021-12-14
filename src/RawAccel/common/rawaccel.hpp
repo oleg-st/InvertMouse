@@ -1,419 +1,230 @@
 #pragma once
 
-#define _USE_MATH_DEFINES
-#include <math.h>
-
-#include "rawaccel-settings.h"
-#include "x64-util.hpp"
-
-#include "accel-linear.hpp"
-#include "accel-classic.hpp"
-#include "accel-natural.hpp"
-#include "accel-naturalgain.hpp"
-#include "accel-power.hpp"
-#include "accel-motivity.hpp"
-#include "accel-noaccel.hpp"
+#include "accel-union.hpp"
 
 namespace rawaccel {
 
-    /// <summary> Struct to hold vector rotation details. </summary>
-    struct rotator {
-
-        /// <summary> Rotational vector, which points in the direction of the post-rotation positive x axis. </summary>
-        vec2d rot_vec = { 1, 0 };
-
-        /// <summary>
-        /// Rotates given input vector according to struct's rotational vector.
-        /// </summary>
-        /// <param name="input">Input vector to be rotated</param>
-        /// <returns>2d vector of rotated input.</returns>
-        inline vec2d apply(const vec2d& input) const {
-            return {
-                input.x * rot_vec.x - input.y * rot_vec.y,
-                input.x * rot_vec.y + input.y * rot_vec.x
-            };
-        }
-
-        rotator(double degrees) {
-            double rads = degrees * M_PI / 180;
-            rot_vec = { cos(rads), sin(rads) };
-        }
-
-        rotator() = default;
+    struct time_clamp {
+        milliseconds min = DEFAULT_TIME_MIN;
+        milliseconds max = DEFAULT_TIME_MAX;
     };
 
-    struct snapper {
-        double threshold = 0;
-
-        inline vec2d apply(const vec2d& input) const {
-            if (input.x != 0 && input.y != 0) {
-                double angle = fabs(atan(input.y / input.x));
-                auto mag = [&] { return sqrtsd(input.x * input.x + input.y * input.y); };
-
-                if (angle > M_PI_2 - threshold) return { 0, _copysign(mag(), input.y) };
-                if (angle < threshold) return { _copysign(mag(), input.x), 0 };
-            }
-
-            return input;
-        }
-
-        snapper(double degrees) : threshold(minsd(fabs(degrees), 45) * M_PI / 180) {}
-
-        snapper() = default;
+    struct device_config {
+        bool disable = false;
+        bool set_extra_info = false;
+        int dpi = 0;
+        int polling_rate = 0;
+        time_clamp clamp;
     };
 
-    /// <summary> Struct to hold clamp (min and max) details for acceleration application </summary>
-    struct accel_scale_clamp {
-        double lo = 0;
-        double hi = 1e9;
-
-        /// <summary>
-        /// Clamps given input to min at lo, max at hi.
-        /// </summary>
-        /// <param name="scale">Double to be clamped</param>
-        /// <returns>Clamped input as double</returns>
-        inline double operator()(double scale) const {
-            return clampsd(scale, lo, hi);
-        }
-
-        accel_scale_clamp(double cap) {
-            if (cap <= 0) {
-                // use default, effectively uncapped accel
-                return;
-            }
-
-            if (cap < 1) {
-                // assume negative accel
-                lo = cap;
-                hi = 1;
-            }
-            else hi = cap;
-        }
-
-        accel_scale_clamp() = default;
+    struct device_settings {
+        wchar_t name[MAX_NAME_LEN] = {};
+        wchar_t profile[MAX_NAME_LEN] = {};
+        wchar_t id[MAX_DEV_ID_LEN] = {};
+        device_config config;
     };
-    
-    template <typename Visitor, typename Variant>
-    inline auto visit_accel(Visitor vis, Variant&& var) {
-        switch (var.tag) {
-        case accel_mode::linear:      return vis(var.u.linear);
-        case accel_mode::classic:     return vis(var.u.classic);
-        case accel_mode::natural:     return vis(var.u.natural);
-        case accel_mode::naturalgain: return vis(var.u.naturalgain);
-        case accel_mode::power:       return vis(var.u.power);
-        case accel_mode::motivity:    return vis(var.u.motivity);
-        default:                      return vis(var.u.noaccel);
-        }
-    }
 
-    struct accel_variant {
-        si_pair* lookup;
+    enum class distance_mode : unsigned char {
+        separate,
+        max,
+        Lp,
+        euclidean,
+    };
 
-        accel_mode tag = accel_mode::noaccel;
+    struct modifier_flags {
+        bool apply_rotate = 0;
+        bool compute_ref_angle = 0;
+        bool apply_snap = 0;
+        bool clamp_speed = 0;
+        distance_mode dist_mode = {};
+        bool apply_directional_weight = 0;
+        bool apply_dir_mul_x = 0;
+        bool apply_dir_mul_y = 0;
 
-        union union_t {
-            accel_linear linear;
-            accel_classic classic;
-            accel_natural natural;
-            accel_naturalgain naturalgain;
-            accel_power power;
-            accel_motivity motivity;
-            accel_noaccel noaccel = {};
-        } u = {};
-
-        accel_variant(const accel_args& args, accel_mode mode, si_pair* lut = nullptr) :
-            tag(mode), lookup(lut)
+        modifier_flags(const profile& args) 
         {
-            visit_accel([&](auto& impl) {
-                impl = { args }; 
-            }, *this);
+            clamp_speed = args.speed_max > 0 && args.speed_min <= args.speed_max;
+            apply_rotate = args.degrees_rotation != 0;
+            apply_snap = args.degrees_snap != 0;
+            apply_directional_weight = args.range_weights.x != args.range_weights.y;
+            compute_ref_angle = apply_snap || apply_directional_weight;
+            apply_dir_mul_x = args.lr_sens_ratio != 1;
+            apply_dir_mul_y = args.ud_sens_ratio != 1;
 
-            if (lookup && tag == accel_mode::motivity) {
-                u.motivity.fn.fill(lookup);
+            if (!args.whole) {
+                dist_mode = distance_mode::separate;
             }
-
-        }
-
-        inline double apply(double speed) const {
-            if (lookup && tag == accel_mode::motivity) {
-                return u.motivity.fn.apply(lookup, speed);
+            else if (args.lp_norm >= MAX_NORM || args.lp_norm <= 0) {
+                dist_mode = distance_mode::max;
             }
-
-            return visit_accel([=](auto&& impl) {
-                return impl(speed);
-            }, *this);
-        }
-
-        accel_variant() = default;
-    };
-
-    /// <summary> Struct to hold information about applying a gain cap. </summary>
-    struct velocity_gain_cap {
-
-        // <summary> The minimum speed past which gain cap is applied. </summary>
-        double threshold = 0;
-
-        // <summary> The gain at the point of cap </summary>
-        double slope = 0;
-
-        // <summary> The intercept for the line with above slope to give continuous velocity function </summary>
-        double intercept = 0;
-
-        /// <summary>
-        /// Initializes a velocity gain cap for a certain speed threshold
-        /// by estimating the slope at the threshold and creating a line
-        /// with that slope for output velocity calculations.
-        /// </summary>
-        /// <param name="speed"> The speed at which velocity gain cap will kick in </param>
-        /// <param name="accel"> The accel implementation used in the containing accel_variant </param>
-        velocity_gain_cap(double speed, const accel_variant& accel)
-        {
-            if (speed <= 0) return;
-
-            // Estimate gain at cap point by taking line between two input vs output velocity points.
-            // First input velocity point is at cap; for second pick a velocity a tiny bit larger.
-            double speed_second = 1.001 * speed;
-            double speed_diff = speed_second - speed;
-
-            // Return if by glitch or strange values the difference in points is 0.
-            if (speed_diff == 0) return;
-
-            // Find the corresponding output velocities for the two points.
-            double out_first = accel.apply(speed) * speed;
-            double out_second = accel.apply(speed_second) * speed_second;
-
-            // Calculate slope and intercept from two points.
-            slope = (out_second - out_first) / speed_diff;
-            intercept = out_first - slope * speed;
-
-            threshold = speed;
-        }
-
-        /// <summary>
-        /// Applies velocity gain cap to speed.
-        /// Returns scale value by which to multiply input to place on gain cap line.
-        /// </summary>
-        /// <param name="speed"> Speed to be capped </param>
-        /// <returns> Scale multiplier for input </returns>
-        inline double apply(double speed) const {
-			return  slope + intercept / speed;
-        }
-
-        /// <summary>
-        /// Whether gain cap should be applied to given speed.
-        /// </summary>
-        /// <param name="speed"> Speed to check against threshold. </param>
-        /// <returns> Whether gain cap should be applied. </returns>
-        inline bool should_apply(double speed) const {
-            return threshold > 0 && speed > threshold;
-        }
-
-        velocity_gain_cap() = default;
-    };
-
-    struct accelerator {
-        accel_variant accel;
-        velocity_gain_cap gain_cap;
-        accel_scale_clamp clamp;
-        double output_speed_cap = 0;
-
-        accelerator(const accel_args& args, accel_mode mode, si_pair* lut = nullptr) :
-            accel(args, mode, lut), gain_cap(args.gain_cap, accel), clamp(args.scale_cap)
-        {
-            output_speed_cap = maxsd(args.speed_cap, 0);
-        }
-
-        inline double apply(double speed) const { 
-            double scale;
-
-            if (gain_cap.should_apply(speed)) {
-                scale = gain_cap.apply(speed);
+            else if (args.lp_norm != 2) {
+                dist_mode = distance_mode::Lp;
             }
             else {
-                scale = accel.apply(speed);
+                dist_mode = distance_mode::euclidean;
             }
-
-            scale = clamp(scale);
-
-            if (output_speed_cap > 0 && (scale * speed) > output_speed_cap) {
-                scale = output_speed_cap / speed;
-            }
-
-            return scale;
         }
 
-        accelerator() = default;
+        modifier_flags() = default;
     };
 
-    struct weighted_distance {
-        double p = 2.0;
-        double p_inverse = 0.5;
-        bool lp_norm_infinity = false;
-        double sigma_x = 1.0;
-        double sigma_y = 1.0;
+    struct modifier_settings {
+        profile prof;
 
-        weighted_distance(const domain_args& args)
-        {
-            sigma_x = args.domain_weights.x;
-            sigma_y = args.domain_weights.y;
-            if (args.lp_norm <= 0)
-            {
-                lp_norm_infinity = true;
-                p = 0.0;
-                p_inverse = 0.0;
-            }
-            else
-            {
-                lp_norm_infinity = false;
-                p = args.lp_norm;
-                p_inverse = 1 / args.lp_norm;
-            }
-        }
-
-        inline double calculate(double x, double y)
-        {
-			double abs_x = fabs(x);
-			double abs_y = fabs(y);
-
-            if (lp_norm_infinity) return maxsd(abs_x, abs_y);
-
-            double x_scaled = abs_x * sigma_x;
-            double y_scaled = abs_y * sigma_y;
-
-            if (p == 2) return sqrtsd(x_scaled * x_scaled + y_scaled * y_scaled);
-            else return pow(pow(x_scaled, p) + pow(y_scaled, p), p_inverse);
-        }
-
-        weighted_distance() = default;
+        struct data_t {
+            modifier_flags flags;
+            vec2d rot_direction;
+            accel_union accel_x;
+            accel_union accel_y;
+        } data = {};
     };
 
-    struct direction_weight {
-        double diff = 0.0;
-        double start = 1.0;
-        bool should_apply = false;
+    inline void init_data(modifier_settings& settings)
+    {
+        auto set_accel = [](accel_union& u, const accel_args& args) {
+            u.visit([&](auto& impl) {
+                impl = { args };
+            }, args);
+        };
 
-        direction_weight(const vec2d& thetas)
-        {
-            diff = thetas.y - thetas.x;
-            start = thetas.x;
+        set_accel(settings.data.accel_x, settings.prof.accel_x);
+        set_accel(settings.data.accel_y, settings.prof.accel_y);
 
-            should_apply = diff != 0;
-        }
+        settings.data.rot_direction = direction(settings.prof.degrees_rotation);
 
-        inline double atan_scale(double x, double y)
-        {
-            return M_2_PI * atan2(fabs(y), fabs(x));
-        }
+        settings.data.flags = modifier_flags(settings.prof);
+    }
 
-        inline double apply(double x, double y)
-        {
-            return atan_scale(x, y) * diff + start;
-        }
-
-        direction_weight() = default;
+    struct io_base {
+        device_config default_dev_cfg;
+        unsigned modifier_data_size = 0;
+        unsigned device_data_size = 0;
     };
 
-    /// <summary> Struct to hold variables and methods for modifying mouse input </summary>
-    struct mouse_modifier {
-        bool apply_rotate = false;
-        bool apply_snap = false;
-        bool apply_accel = false;
-        bool combine_magnitudes = true;
-        rotator rotate;
-        snapper snap;
-        weighted_distance distance;
-        direction_weight directional;
-        vec2<accelerator> accels;
-        vec2d sensitivity = { 1, 1 };
-        vec2d directional_multipliers = {};
+    static_assert(alignof(io_base) == alignof(modifier_settings) && alignof(modifier_settings) == alignof(device_settings));
 
-        mouse_modifier(const settings& args, vec2<si_pair*> luts = {}) :
-            combine_magnitudes(args.combine_mags)
+    class modifier {
+    public:
+#ifdef _KERNEL_MODE
+        __forceinline
+#endif
+        void modify(vec2d& in, const modifier_settings& settings, double dpi_factor, milliseconds time) const
         {
-            if (args.degrees_rotation != 0) {
-                rotate = rotator(args.degrees_rotation);
-                apply_rotate = true;
-            }
-            
-            if (args.degrees_snap != 0) {
-                snap = snapper(args.degrees_snap);
-                apply_snap = true;
-            }
+            auto& args = settings.prof;
+            auto& data = settings.data;
+            auto& flags = settings.data.flags;
 
-            if (args.sens.x != 0) sensitivity.x = args.sens.x;
-            if (args.sens.y != 0) sensitivity.y = args.sens.y;
+            double reference_angle = 0;
+            double ips_factor = dpi_factor / time;
 
-            directional_multipliers.x = fabs(args.dir_multipliers.x);
-            directional_multipliers.y = fabs(args.dir_multipliers.y);
+            if (flags.apply_rotate) in = rotate(in, data.rot_direction);
 
-            if ((combine_magnitudes && args.modes.x == accel_mode::noaccel) ||
-                (args.modes.x == accel_mode::noaccel &&
-                    args.modes.y == accel_mode::noaccel)) {
-                return;
-            }
-
-            accels.x = accelerator(args.argsv.x, args.modes.x, luts.x);
-            accels.y = accelerator(args.argsv.y, args.modes.y, luts.y);
-
-            distance = weighted_distance(args.domain_args);
-            directional = direction_weight(args.range_weights);
-
-            apply_accel = true;
-        }
-
-        void modify(vec2d& movement, milliseconds time) {
-            apply_rotation(movement);
-            apply_angle_snap(movement);
-            apply_acceleration(movement, [=] { return time; });
-            apply_sensitivity(movement);
-        }
-
-        inline void apply_rotation(vec2d& movement) {
-            if (apply_rotate) movement = rotate.apply(movement);
-        }
-
-        inline void apply_angle_snap(vec2d& movement) {
-            if (apply_snap) movement = snap.apply(movement);
-        }
-
-        template <typename TimeSupplier>
-        inline void apply_acceleration(vec2d& movement, TimeSupplier time_supp) {
-            if (apply_accel) {
-                milliseconds time = time_supp();
-
-                if (combine_magnitudes) {
-                    double mag = distance.calculate(movement.x, movement.y);
-                    double speed = mag / time;
-                    double scale = accels.x.apply(speed);
-
-                    if (directional.should_apply)
-                    {
-                        scale = (scale - 1)*directional.apply(movement.x, movement.y) + 1;
-                    }
-
-                    movement.x *= scale;
-                    movement.y *= scale;
+            if (flags.compute_ref_angle && in.y != 0) {
+                if (in.x == 0) {
+                    reference_angle = M_PI / 2;
                 }
                 else {
-                    movement.x *= accels.x.apply(fabs(movement.x) / time);
-                    movement.y *= accels.y.apply(fabs(movement.y) / time);
+                    reference_angle = atan(fabs(in.y / in.x));
+
+                    if (flags.apply_snap) {
+                        double snap = args.degrees_snap * M_PI / 180;
+
+                        if (reference_angle > M_PI / 2 - snap) {
+                            reference_angle = M_PI / 2;
+                            in = { 0, _copysign(magnitude(in), in.y) };
+                        }
+                        else if (reference_angle < snap) {
+                            reference_angle = 0;
+                            in = { _copysign(magnitude(in), in.x), 0 };
+                        }
+                    }
                 }
             }
+
+            if (flags.clamp_speed) {
+                double speed = magnitude(in) * ips_factor;
+                double ratio = clampsd(speed, args.speed_min, args.speed_max) / speed;
+                in.x *= ratio;
+                in.y *= ratio;
+            }
+
+            vec2d abs_weighted_vel = {
+                fabs(in.x * ips_factor * args.domain_weights.x),
+                fabs(in.y * ips_factor * args.domain_weights.y)
+            };
+
+            if (flags.dist_mode == distance_mode::separate) {
+                in.x *= (*cb_x)(data.accel_x, args.accel_x, abs_weighted_vel.x, args.range_weights.x);
+                in.y *= (*cb_y)(data.accel_y, args.accel_y, abs_weighted_vel.y, args.range_weights.y);
+            }
+            else {
+                double speed;
+
+                if (flags.dist_mode == distance_mode::max) {
+                    speed = maxsd(abs_weighted_vel.x, abs_weighted_vel.y);
+                }
+                else if (flags.dist_mode == distance_mode::Lp) {
+                    speed = lp_distance(abs_weighted_vel, args.lp_norm);
+                }
+                else {
+                    speed = magnitude(abs_weighted_vel);
+                }
+
+                double weight = args.range_weights.x;
+
+                if (flags.apply_directional_weight) {
+                    double diff = args.range_weights.y - args.range_weights.x;
+                    weight += 2 / M_PI * reference_angle * diff;
+                }
+
+                double scale = (*cb_x)(data.accel_x, args.accel_x, speed, weight);
+                in.x *= scale;
+                in.y *= scale;
+            }
+
+            double dpi_adjusted_sens = args.sensitivity * dpi_factor;
+            in.x *= dpi_adjusted_sens;
+            in.y *= dpi_adjusted_sens * args.yx_sens_ratio;
+
+            if (flags.apply_dir_mul_x && in.x < 0) {
+                in.x *= args.lr_sens_ratio;
+            }
+
+            if (flags.apply_dir_mul_y && in.y < 0) {
+                in.y *= args.ud_sens_ratio;
+            }
         }
 
-        inline void apply_sensitivity(vec2d& movement) {   
-            movement.x *= sensitivity.x;
-            movement.y *= sensitivity.y;
-
-            if (directional_multipliers.x > 0 && movement.x < 0) {
-                movement.x *= directional_multipliers.x;
-            }
-            if (directional_multipliers.y > 0 && movement.y < 0) {
-                movement.y *= directional_multipliers.y;
-            }
+        modifier(modifier_settings& settings)
+        {
+            set_callback(cb_x, settings.data.accel_x, settings.prof.accel_x);
+            set_callback(cb_y, settings.data.accel_y, settings.prof.accel_y);
         }
 
-        mouse_modifier() = default;
+        modifier() = default;
+
+    private:
+        using callback_t = double (*)(const accel_union&, const accel_args&, double, double);
+
+        void set_callback(callback_t& cb, accel_union& u, const accel_args& args)
+        {
+            u.visit([&](auto& impl) {
+                cb = &callback_template<remove_ref_t<decltype(impl)>>;
+            }, args);
+        }
+
+        template <typename AccelFunc>
+        static double callback_template(const accel_union& u, 
+                                        const accel_args& args, 
+                                        double x, 
+                                        double range_weight)
+        {
+            auto& accel_fn = reinterpret_cast<const AccelFunc&>(u);
+            return 1 + (accel_fn(x, args) - 1) * range_weight;
+        }
+
+        callback_t cb_x = &callback_template<accel_noaccel>;
+        callback_t cb_y = &callback_template<accel_noaccel>;
     };
 
 } // rawaccel
