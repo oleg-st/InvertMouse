@@ -6,19 +6,19 @@ namespace InvertMouse.Inverter
 {
     public abstract class InvertMouseBase
     {
-        protected Thread Thread;
-        protected bool Running;
+        protected Thread thread;
 
-        public bool IsRunning => Running;
+        public bool IsRunning { get; protected set; }
         public CheckState State { get; protected set; }
         public string Error { get; protected set; }
         public double Delay { get; protected set; }
         public bool WhenCursorIsHidden { get; set; }
-        public bool XAxis { get; set; }
-        public bool YAxis { get; set; }
 
-        protected int XMultiplier => XAxis ? -1 : 1;
-        protected int YMultiplier => YAxis ? -1 : 1;
+        public decimal XMultiplier { get; set; }
+        public decimal YMultiplier { get; set; }
+
+        public const decimal InvertMultiplier = -1;
+        public const decimal IdentityMultiplier = 1;
 
         protected bool IsCursorHidden()
         {
@@ -32,7 +32,7 @@ namespace InvertMouse.Inverter
 
         public virtual bool Start()
         {
-            if (Running)
+            if (IsRunning)
             {
                 return true;
             }
@@ -44,24 +44,24 @@ namespace InvertMouse.Inverter
 
             lock (this)
             {
-                Thread = new Thread(Worker);
-                Running = true;
-                Thread.Start();
+                thread = new Thread(Worker);
+                IsRunning = true;
+                thread.Start();
                 return true;
             }
         }
 
         public virtual void Stop()
         {
-            if (!Running)
+            if (!IsRunning)
             {
                 return;
             }
 
-            Running = false;
+            IsRunning = false;
             lock (this)
             {
-                Thread.Join();
+                thread.Join();
             }
         }
     }

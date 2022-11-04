@@ -44,7 +44,7 @@ namespace InvertMouse.Inverter
                 (ushort)InterceptionLib.InterceptionFilterMouseState.INTERCEPTION_FILTER_MOUSE_MOVE);
 
             var stroke = new InterceptionLib.InterceptionMouseStroke();
-            while (Running)
+            while (IsRunning)
             {
                 var device = InterceptionLib.interception_wait_with_timeout(context, 500);
                 if (
@@ -58,8 +58,8 @@ namespace InvertMouse.Inverter
                         && (!WhenCursorIsHidden || IsCursorHidden())
                     )
                     {
-                        stroke.x *= XMultiplier;
-                        stroke.y *= YMultiplier;
+                        stroke.x = (int) Math.Round(stroke.x * XMultiplier);
+                        stroke.y = (int) Math.Round(stroke.y * YMultiplier);
                     }
 
                     InterceptionLib.interception_send(context, device, ref stroke, 1);

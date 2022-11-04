@@ -43,15 +43,21 @@ namespace InvertMouse
             this.driverLabel = new System.Windows.Forms.Label();
             this.driverComboBox = new System.Windows.Forms.ComboBox();
             this.minimizeToTrayCB = new System.Windows.Forms.CheckBox();
+            this.yAxisCustomTB = new System.Windows.Forms.TextBox();
+            this.yAxisCustomLabel = new System.Windows.Forms.Label();
+            this.xAxisCustomLabel = new System.Windows.Forms.Label();
+            this.xAxisCustomTB = new System.Windows.Forms.TextBox();
             this.contextMenuStrip.SuspendLayout();
             this.SuspendLayout();
             // 
             // startStopBtn
             // 
+            this.startStopBtn.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.startStopBtn.Location = new System.Drawing.Point(13, 100);
             this.startStopBtn.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.startStopBtn.Name = "startStopBtn";
-            this.startStopBtn.Size = new System.Drawing.Size(286, 57);
+            this.startStopBtn.Size = new System.Drawing.Size(285, 57);
             this.startStopBtn.TabIndex = 2;
             this.startStopBtn.Text = "Start";
             this.startStopBtn.UseVisualStyleBackColor = true;
@@ -97,7 +103,7 @@ namespace InvertMouse
             this.xAxisCB.Location = new System.Drawing.Point(16, 234);
             this.xAxisCB.Name = "xAxisCB";
             this.xAxisCB.Size = new System.Drawing.Size(70, 25);
-            this.xAxisCB.TabIndex = 5;
+            this.xAxisCB.TabIndex = 6;
             this.xAxisCB.Text = "X Axis";
             this.xAxisCB.UseVisualStyleBackColor = true;
             this.xAxisCB.CheckedChanged += new System.EventHandler(this.OptionsChanged);
@@ -141,6 +147,8 @@ namespace InvertMouse
             // 
             // driverComboBox
             // 
+            this.driverComboBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.driverComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.driverComboBox.FormattingEnabled = true;
             this.driverComboBox.Items.AddRange(new object[] {
@@ -148,7 +156,7 @@ namespace InvertMouse
             "RawAccel"});
             this.driverComboBox.Location = new System.Drawing.Point(16, 33);
             this.driverComboBox.Name = "driverComboBox";
-            this.driverComboBox.Size = new System.Drawing.Size(283, 29);
+            this.driverComboBox.Size = new System.Drawing.Size(282, 29);
             this.driverComboBox.TabIndex = 1;
             this.driverComboBox.SelectedIndexChanged += new System.EventHandler(this.driverComboBox_SelectedIndexChanged);
             // 
@@ -158,15 +166,54 @@ namespace InvertMouse
             this.minimizeToTrayCB.Location = new System.Drawing.Point(16, 265);
             this.minimizeToTrayCB.Name = "minimizeToTrayCB";
             this.minimizeToTrayCB.Size = new System.Drawing.Size(142, 25);
-            this.minimizeToTrayCB.TabIndex = 6;
+            this.minimizeToTrayCB.TabIndex = 8;
             this.minimizeToTrayCB.Text = "Minimize to tray";
             this.minimizeToTrayCB.UseVisualStyleBackColor = true;
+            // 
+            // yAxisCustomTB
+            // 
+            this.yAxisCustomTB.Location = new System.Drawing.Point(176, 200);
+            this.yAxisCustomTB.Name = "yAxisCustomTB";
+            this.yAxisCustomTB.Size = new System.Drawing.Size(55, 29);
+            this.yAxisCustomTB.TabIndex = 5;
+            this.yAxisCustomTB.TextChanged += new System.EventHandler(this.AxisCustomTB_TextChanged);
+            this.yAxisCustomTB.KeyDown += new System.Windows.Forms.KeyEventHandler(this.AxisCustomTB_KeyDown);
+            this.yAxisCustomTB.Leave += new System.EventHandler(this.AxisCustomTB_Leave);
+            // 
+            // yAxisCustomLabel
+            // 
+            this.yAxisCustomLabel.Location = new System.Drawing.Point(92, 204);
+            this.yAxisCustomLabel.Name = "yAxisCustomLabel";
+            this.yAxisCustomLabel.Size = new System.Drawing.Size(81, 21);
+            this.yAxisCustomLabel.TabIndex = 5;
+            this.yAxisCustomLabel.Text = "Multiplier ";
+            // 
+            // xAxisCustomLabel
+            // 
+            this.xAxisCustomLabel.Location = new System.Drawing.Point(92, 235);
+            this.xAxisCustomLabel.Name = "xAxisCustomLabel";
+            this.xAxisCustomLabel.Size = new System.Drawing.Size(81, 21);
+            this.xAxisCustomLabel.TabIndex = 7;
+            this.xAxisCustomLabel.Text = "Multiplier ";
+            // 
+            // xAxisCustomTB
+            // 
+            this.xAxisCustomTB.Location = new System.Drawing.Point(176, 231);
+            this.xAxisCustomTB.Name = "xAxisCustomTB";
+            this.xAxisCustomTB.Size = new System.Drawing.Size(55, 29);
+            this.xAxisCustomTB.TabIndex = 7;
+            this.xAxisCustomTB.TextChanged += new System.EventHandler(this.AxisCustomTB_TextChanged);
+            this.xAxisCustomTB.KeyDown += new System.Windows.Forms.KeyEventHandler(this.AxisCustomTB_KeyDown);
             // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 21F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(311, 300);
+            this.Controls.Add(this.xAxisCustomLabel);
+            this.Controls.Add(this.xAxisCustomTB);
+            this.Controls.Add(this.yAxisCustomLabel);
+            this.Controls.Add(this.yAxisCustomTB);
             this.Controls.Add(this.minimizeToTrayCB);
             this.Controls.Add(this.driverComboBox);
             this.Controls.Add(this.driverLabel);
@@ -206,6 +253,10 @@ namespace InvertMouse
         private System.Windows.Forms.Label driverLabel;
         private System.Windows.Forms.ComboBox driverComboBox;
         private System.Windows.Forms.CheckBox minimizeToTrayCB;
+        private System.Windows.Forms.TextBox yAxisCustomTB;
+        private System.Windows.Forms.Label yAxisCustomLabel;
+        private System.Windows.Forms.Label xAxisCustomLabel;
+        private System.Windows.Forms.TextBox xAxisCustomTB;
     }
 }
 

@@ -1,6 +1,8 @@
 ﻿using InvertMouse.Inverter;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Globalization;
 using System.Windows.Forms;
 using CheckState = InvertMouse.Inverter.CheckState;
 
@@ -9,8 +11,10 @@ namespace InvertMouse
     public partial class MainForm : Form
     {
         private InvertMouseBase _invertMouse;
-
         private readonly Dictionary<DriverType, InvertMouseBase> _invertMouseDictionary = new Dictionary<DriverType, InvertMouseBase>();
+        private bool XAxisActive => xAxisCB.Checked;
+        private bool YAxisActive => yAxisCB.Checked;
+        private decimal _yMultiplier = InvertMouseBase.InvertMultiplier, _xMultiplier = InvertMouseBase.InvertMultiplier;
 
         public MainForm()
         {
@@ -70,6 +74,9 @@ namespace InvertMouse
         private void MainForm_Load(object sender, EventArgs e)
         {
             Detect();
+            UpdateMultiplierControls();
+            ResetAxisMultiplier(xAxisCustomTB);
+            ResetAxisMultiplier(yAxisCustomTB);
         }
 
         private void UpdateState()
@@ -109,8 +116,8 @@ namespace InvertMouse
             }
 
             _invertMouse.WhenCursorIsHidden = cursorHiddenCB.Checked;
-            _invertMouse.XAxis = xAxisCB.Checked;
-            _invertMouse.YAxis = yAxisCB.Checked;
+            _invertMouse.XMultiplier = XAxisActive ? _xMultiplier : InvertMouseBase.IdentityMultiplier;
+            _invertMouse.YMultiplier = YAxisActive ? _yMultiplier : InvertMouseBase.IdentityMultiplier;
         }
 
         private void StartStopBtn_Click(object sender, EventArgs e)
@@ -129,6 +136,7 @@ namespace InvertMouse
 
         private void OptionsChanged(object sender, EventArgs e)
         {
+            UpdateMultiplierControls();
             SetOptions();
         }
 
@@ -190,6 +198,93 @@ namespace InvertMouse
         private void driverComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
             SetDriver((DriverType)driverComboBox.SelectedIndex);
+        }
+
+        private void UpdateMultiplierControls()
+        {
+            xAxisCustomTB.Enabled = xAxisCustomLabel.Enabled = XAxisActive;
+            yAxisCustomTB.Enabled = yAxisCustomLabel.Enabled = YAxisActive;
+        }
+
+        private ref decimal GetRefMultiplierForTextBox(TextBox textBox)
+        {
+            if (textBox == xAxisCustomTB)
+            {
+                return ref _xMultiplier;
+            }
+
+            if (textBox == yAxisCustomTB)
+            {
+                return ref _yMultiplier;
+            }
+
+            throw new ArgumentException("Unknown axis textbox", nameof(textBox));
+        }
+
+        private bool TrySetAxisMultiplier(TextBox textBox)
+        {
+            if (!decimal.TryParse(textBox.Text.Replace(',', '.'), NumberStyles.Number, CultureInfo.InvariantCulture,
+                    out var multiplier))
+            {
+                textBox.ForeColor = Color.Red;
+                return false;
+            }
+
+            textBox.ForeColor = SystemColors.WindowText;
+            GetRefMultiplierForTextBox(textBox) = multiplier;
+            UpdateMultiplierControls();
+            SetOptions();
+            return true;
+        }
+
+        private void ResetAxisMultiplier(TextBox textBox)
+        {
+            var selectStart = textBox.SelectionStart;
+            textBox.Text = GetRefMultiplierForTextBox(textBox).ToString(CultureInfo.InvariantCulture);
+            textBox.SelectionStart = selectStart;
+        }
+
+        private bool SetAxisMultiplier(TextBox textBox)
+        {
+            if (!TrySetAxisMultiplier(textBox))
+            {
+                MessageBox.Show($"Invalid multiplier: {textBox.Text}", "Error", MessageBoxButtons.OK,
+                    MessageBoxIcon.Exclamation);
+                return false;
+            }
+
+            return true;
+        }
+
+        private void AxisCustomTB_TextChanged(object sender, EventArgs e)
+        {
+            TrySetAxisMultiplier((TextBox)sender);
+        }
+
+        private void AxisCustomTB_Leave(object sender, EventArgs e)
+        {
+            var textBox = (TextBox)sender;
+            if (!SetAxisMultiplier(textBox))
+            {
+                ResetAxisMultiplier(textBox);
+            }
+        }
+
+        private void AxisCustomTB_KeyDown(object sender, KeyEventArgs e)
+        {
+            var textBox = (TextBox) sender;
+
+            if (e.KeyCode == Keys.Enter)
+            {
+                SetAxisMultiplier(textBox);
+                e.SuppressKeyPress = true;
+            }
+
+            if (e.KeyCode == Keys.Escape)
+            {
+                ResetAxisMultiplier(textBox);
+                e.SuppressKeyPress = true;
+            }
         }
     }
 }
