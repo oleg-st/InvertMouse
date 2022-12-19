@@ -23,7 +23,11 @@ namespace InvertMouse.Inverter
         protected bool IsCursorHidden()
         {
             var cursorInfo = new WinAPI.CURSORINFO { cbSize = Marshal.SizeOf(typeof(WinAPI.CURSORINFO)) };
-            WinAPI.GetCursorInfo(ref cursorInfo);
+            if (!WinAPI.GetCursorInfo(ref cursorInfo))
+            {
+                // fails on secure desktop, i.e. in UAC
+                return false;
+            }
             return (cursorInfo.flags & WinAPI.CURSOR_SHOWING) == 0;
         }
 
