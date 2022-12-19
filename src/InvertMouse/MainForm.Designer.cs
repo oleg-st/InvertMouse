@@ -82,7 +82,7 @@ namespace InvertMouse
             this.cursorHiddenCB.TabIndex = 3;
             this.cursorHiddenCB.Text = "When cursor is hidden";
             this.cursorHiddenCB.UseVisualStyleBackColor = true;
-            this.cursorHiddenCB.CheckedChanged += new System.EventHandler(this.OptionsChanged);
+            this.cursorHiddenCB.CheckedChanged += new System.EventHandler(this.cursorHiddenCB_CheckedChanged);
             // 
             // yAxisCB
             // 
@@ -95,7 +95,7 @@ namespace InvertMouse
             this.yAxisCB.TabIndex = 4;
             this.yAxisCB.Text = "Y Axis";
             this.yAxisCB.UseVisualStyleBackColor = true;
-            this.yAxisCB.CheckedChanged += new System.EventHandler(this.OptionsChanged);
+            this.yAxisCB.CheckedChanged += new System.EventHandler(this.yAxisCB_CheckedChanged);
             // 
             // xAxisCB
             // 
@@ -106,7 +106,7 @@ namespace InvertMouse
             this.xAxisCB.TabIndex = 6;
             this.xAxisCB.Text = "X Axis";
             this.xAxisCB.UseVisualStyleBackColor = true;
-            this.xAxisCB.CheckedChanged += new System.EventHandler(this.OptionsChanged);
+            this.xAxisCB.CheckedChanged += new System.EventHandler(this.xAxisCB_CheckedChanged);
             // 
             // notifyIcon
             // 
@@ -169,6 +169,7 @@ namespace InvertMouse
             this.minimizeToTrayCB.TabIndex = 8;
             this.minimizeToTrayCB.Text = "Minimize to tray";
             this.minimizeToTrayCB.UseVisualStyleBackColor = true;
+            this.minimizeToTrayCB.CheckedChanged += new System.EventHandler(this.minimizeToTrayCB_CheckedChanged);
             // 
             // yAxisCustomTB
             // 

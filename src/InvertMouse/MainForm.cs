@@ -3,7 +3,9 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
+using System.IO;
 using System.Windows.Forms;
+using Newtonsoft.Json;
 using CheckState = InvertMouse.Inverter.CheckState;
 
 namespace InvertMouse
@@ -12,19 +14,57 @@ namespace InvertMouse
     {
         private InvertMouseBase _invertMouse;
         private readonly Dictionary<DriverType, InvertMouseBase> _invertMouseDictionary = new Dictionary<DriverType, InvertMouseBase>();
-        private bool XAxisActive => xAxisCB.Checked;
-        private bool YAxisActive => yAxisCB.Checked;
-        private decimal _yMultiplier = InvertMouseBase.InvertMultiplier, _xMultiplier = InvertMouseBase.InvertMultiplier;
+
+        private bool _autoSaveOptions = true;
+        private readonly string _optionsFilename;
+        private readonly JsonSerializer _serializer;
+
+        private Options _options;
 
         public MainForm()
         {
             InitializeComponent();
+            _serializer = new JsonSerializer
+            {
+                Formatting = Formatting.Indented
+            };
+            var directoryName = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            _optionsFilename = Path.Combine(directoryName ?? ".", "Options.json");
             notifyIcon.Icon = Icon;
             UpdateState();
         }
 
+        private void OptionsOnChanged(object sender, EventArgs e)
+        {
+            if (_autoSaveOptions)
+            {
+                SaveOptions();
+            }
+        }
+
+        private void SaveOptions()
+        {
+            try
+            {
+                using (var streamWriter = new StreamWriter(_optionsFilename))
+                using (var writer = new JsonTextWriter(streamWriter))
+                {
+                    _serializer.Serialize(writer, _options);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Cannot save options to {_optionsFilename}: {ex.Message}", "Error", MessageBoxButtons.OK,
+                    MessageBoxIcon.Exclamation);
+
+                _autoSaveOptions = false;
+            }
+        }
+
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
+            _options.Changed -= OptionsOnChanged;
+
             Stop();
         }
 
@@ -41,13 +81,13 @@ namespace InvertMouse
 
         private void Detect()
         {
-            foreach (DriverType driverType in (DriverType[])Enum.GetValues(typeof(DriverType)))
+            foreach (var driverType in (DriverType[])Enum.GetValues(typeof(DriverType)))
             {
                 var invertMouse = GetInvertMouse(driverType);
                 if (invertMouse.State == CheckState.Ok)
                 {
-                    SetDriver(driverType);
-                    Start();
+                    _options.DriverType = driverType;
+                    _options.Running = true;
                     break;
                 }
             }
@@ -58,6 +98,7 @@ namespace InvertMouse
             if (_invertMouse != null)
             {
                 _invertMouse.Start();
+                _options.Running = _invertMouse.IsRunning;
                 UpdateState();
             }
         }
@@ -67,16 +108,73 @@ namespace InvertMouse
             if (_invertMouse != null)
             {
                 _invertMouse.Stop();
+                _options.Running = _invertMouse.IsRunning;
                 UpdateState();
             }
         }
 
-        private void MainForm_Load(object sender, EventArgs e)
+        private bool LoadOptions()
         {
-            Detect();
-            UpdateMultiplierControls();
+            try
+            {
+                if (File.Exists(_optionsFilename))
+                {
+                    using (var streamReader = new StreamReader(_optionsFilename))
+                    using (var reader = new JsonTextReader(streamReader))
+                    {
+                        _options = _serializer.Deserialize<Options>(reader);
+                    }
+
+                    SetFromOptions();
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Cannot load options from {_optionsFilename}: {ex.Message}", "Error", MessageBoxButtons.OK,
+                    MessageBoxIcon.Exclamation);
+            }
+
+            return false;
+        }
+
+        private void SetFromOptions()
+        {
+            SetDriver(_options.DriverType);
+            if (_options.Running)
+            {
+                Start();
+            }
+            else
+            {
+                Stop();
+            }
+
+            cursorHiddenCB.Checked = _options.WhenCursorIsHidden;
+            xAxisCB.Checked = _options.XAxis;
+            yAxisCB.Checked = _options.YAxis;
             ResetAxisMultiplier(xAxisCustomTB);
             ResetAxisMultiplier(yAxisCustomTB);
+            minimizeToTrayCB.Checked = _options.MinimizeToTray;
+        }
+
+        private void ResetOptions()
+        {
+            _options = new Options();
+            Detect();
+            SaveOptions();
+        }
+
+        private void MainForm_Load(object sender, EventArgs e)
+        {
+            if (!LoadOptions())
+            {
+                ResetOptions();
+                SetFromOptions();
+            }
+
+            _options.Changed += OptionsOnChanged;
+            UpdateMultiplierControls();
         }
 
         private void UpdateState()
@@ -91,7 +189,7 @@ namespace InvertMouse
             switch (_invertMouse.State)
             {
                 case CheckState.LibraryNotLoaded:
-                    stateLabel.Text = $"Failed to load library";
+                    stateLabel.Text = "Failed to load library";
                     startStopBtn.Enabled = false;
                     break;
                 case CheckState.DriverNotInstalled:
@@ -108,41 +206,33 @@ namespace InvertMouse
             startStopBtn.Text = _invertMouse.IsRunning ? "Stop" : "Start";
         }
 
-        private void SetOptions()
+        private void SetInvertMouseOptions()
         {
             if (_invertMouse == null)
             {
                 return;
             }
 
-            _invertMouse.WhenCursorIsHidden = cursorHiddenCB.Checked;
-            _invertMouse.XMultiplier = XAxisActive ? _xMultiplier : InvertMouseBase.IdentityMultiplier;
-            _invertMouse.YMultiplier = YAxisActive ? _yMultiplier : InvertMouseBase.IdentityMultiplier;
+            _invertMouse.WhenCursorIsHidden = _options.WhenCursorIsHidden;
+            _invertMouse.XMultiplier = _options.XAxis ? _options.XMultiplier : InvertMouseBase.IdentityMultiplier;
+            _invertMouse.YMultiplier = _options.YAxis ? _options.YMultiplier : InvertMouseBase.IdentityMultiplier;
         }
 
         private void StartStopBtn_Click(object sender, EventArgs e)
         {
             if (_invertMouse.IsRunning)
             {
-                _invertMouse.Stop();
+                Stop();
             }
             else
             {
-                _invertMouse.Start();
+                Start();
             }
-
-            UpdateState();
-        }
-
-        private void OptionsChanged(object sender, EventArgs e)
-        {
-            UpdateMultiplierControls();
-            SetOptions();
         }
 
         private void MainForm_Resize(object sender, EventArgs e)
         {
-            if (WindowState == FormWindowState.Minimized && minimizeToTrayCB.Checked)
+            if (WindowState == FormWindowState.Minimized && _options.MinimizeToTray)
             {
                 ShowInTaskbar = false;
                 notifyIcon.Visible = true;
@@ -186,11 +276,13 @@ namespace InvertMouse
             }
 
             _invertMouse = GetInvertMouse(driverType);
+            SetInvertMouseOptions();
             if (running)
             {
                 _invertMouse.Start();
             }
-            SetOptions();
+
+            _options.DriverType = driverType;
             UpdateState();
             driverComboBox.SelectedIndex = (int)driverType;
         }
@@ -202,23 +294,34 @@ namespace InvertMouse
 
         private void UpdateMultiplierControls()
         {
-            xAxisCustomTB.Enabled = xAxisCustomLabel.Enabled = XAxisActive;
-            yAxisCustomTB.Enabled = yAxisCustomLabel.Enabled = YAxisActive;
+            xAxisCustomTB.Enabled = xAxisCustomLabel.Enabled = _options.XAxis;
+            yAxisCustomTB.Enabled = yAxisCustomLabel.Enabled = _options.YAxis;
         }
 
-        private ref decimal GetRefMultiplierForTextBox(TextBox textBox)
+        private decimal GetMultiplierForTextBox(TextBox textBox)
         {
             if (textBox == xAxisCustomTB)
             {
-                return ref _xMultiplier;
+                return _options.XMultiplier;
             }
 
             if (textBox == yAxisCustomTB)
             {
-                return ref _yMultiplier;
+                return _options.YMultiplier;
             }
 
-            throw new ArgumentException("Unknown axis textbox", nameof(textBox));
+            throw new ArgumentException("Unknown axis text box", nameof(textBox));
+        }
+
+        private void SetMultiplierForTextBox(TextBox textBox, decimal value)
+        {
+            if (textBox == xAxisCustomTB)
+            {
+                _options.XMultiplier = value;
+            } else if (textBox == yAxisCustomTB)
+            {
+                _options.YMultiplier = value;
+            }
         }
 
         private bool TrySetAxisMultiplier(TextBox textBox)
@@ -231,16 +334,16 @@ namespace InvertMouse
             }
 
             textBox.ForeColor = SystemColors.WindowText;
-            GetRefMultiplierForTextBox(textBox) = multiplier;
+            SetMultiplierForTextBox(textBox, multiplier);
             UpdateMultiplierControls();
-            SetOptions();
+            SetInvertMouseOptions();
             return true;
         }
 
         private void ResetAxisMultiplier(TextBox textBox)
         {
             var selectStart = textBox.SelectionStart;
-            textBox.Text = GetRefMultiplierForTextBox(textBox).ToString(CultureInfo.InvariantCulture);
+            textBox.Text = GetMultiplierForTextBox(textBox).ToString(CultureInfo.InvariantCulture);
             textBox.SelectionStart = selectStart;
         }
 
@@ -268,6 +371,31 @@ namespace InvertMouse
             {
                 ResetAxisMultiplier(textBox);
             }
+        }
+
+        private void cursorHiddenCB_CheckedChanged(object sender, EventArgs e)
+        {
+            _options.WhenCursorIsHidden = cursorHiddenCB.Checked;
+            SetInvertMouseOptions();
+        }
+
+        private void yAxisCB_CheckedChanged(object sender, EventArgs e)
+        {
+            _options.YAxis = yAxisCB.Checked;
+            UpdateMultiplierControls();
+            SetInvertMouseOptions();
+        }
+
+        private void xAxisCB_CheckedChanged(object sender, EventArgs e)
+        {
+            _options.XAxis = xAxisCB.Checked;
+            UpdateMultiplierControls();
+            SetInvertMouseOptions();
+        }
+
+        private void minimizeToTrayCB_CheckedChanged(object sender, EventArgs e)
+        {
+            _options.MinimizeToTray = minimizeToTrayCB.Checked;
         }
 
         private void AxisCustomTB_KeyDown(object sender, KeyEventArgs e)
