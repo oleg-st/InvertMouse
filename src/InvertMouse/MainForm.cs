@@ -31,7 +31,12 @@ namespace InvertMouse
             var directoryName = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
             _optionsFilename = Path.Combine(directoryName ?? ".", "Options.json");
             notifyIcon.Icon = Icon;
-            UpdateState();
+
+            if (!LoadOptions())
+            {
+                ResetOptions();
+                SetFromOptions();
+            }
         }
 
         private void OptionsOnChanged(object sender, EventArgs e)
@@ -167,12 +172,6 @@ namespace InvertMouse
 
         private void MainForm_Load(object sender, EventArgs e)
         {
-            if (!LoadOptions())
-            {
-                ResetOptions();
-                SetFromOptions();
-            }
-
             _options.Changed += OptionsOnChanged;
             UpdateMultiplierControls();
         }
