@@ -125,6 +125,21 @@ namespace InvertMouse
             }
         }
 
+        private bool _startMinimized;
+
+        public bool StartMinimized
+        {
+            get => _startMinimized;
+            set
+            {
+                if (_startMinimized != value)
+                {
+                    _startMinimized = value;
+                    OnChanged();
+                }
+            }
+        }
+
         public event EventHandler Changed;
 
         protected virtual void OnChanged()

@@ -47,6 +47,7 @@ namespace InvertMouse
             this.yAxisCustomLabel = new System.Windows.Forms.Label();
             this.xAxisCustomLabel = new System.Windows.Forms.Label();
             this.xAxisCustomTB = new System.Windows.Forms.TextBox();
+            this.startMinimizedCB = new System.Windows.Forms.CheckBox();
             this.contextMenuStrip.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -206,11 +207,23 @@ namespace InvertMouse
             this.xAxisCustomTB.TextChanged += new System.EventHandler(this.AxisCustomTB_TextChanged);
             this.xAxisCustomTB.KeyDown += new System.Windows.Forms.KeyEventHandler(this.AxisCustomTB_KeyDown);
             // 
+            // startMinimizedCB
+            // 
+            this.startMinimizedCB.AutoSize = true;
+            this.startMinimizedCB.Location = new System.Drawing.Point(164, 265);
+            this.startMinimizedCB.Name = "startMinimizedCB";
+            this.startMinimizedCB.Size = new System.Drawing.Size(138, 25);
+            this.startMinimizedCB.TabIndex = 9;
+            this.startMinimizedCB.Text = "Start minimized";
+            this.startMinimizedCB.UseVisualStyleBackColor = true;
+            this.startMinimizedCB.CheckedChanged += new System.EventHandler(this.startMinimizedCB_CheckedChanged);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 21F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(311, 300);
+            this.Controls.Add(this.startMinimizedCB);
             this.Controls.Add(this.xAxisCustomLabel);
             this.Controls.Add(this.xAxisCustomTB);
             this.Controls.Add(this.yAxisCustomLabel);
@@ -258,6 +271,7 @@ namespace InvertMouse
         private System.Windows.Forms.Label yAxisCustomLabel;
         private System.Windows.Forms.Label xAxisCustomLabel;
         private System.Windows.Forms.TextBox xAxisCustomTB;
+        private System.Windows.Forms.CheckBox startMinimizedCB;
     }
 }
 

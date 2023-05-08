@@ -161,6 +161,7 @@ namespace InvertMouse
             ResetAxisMultiplier(xAxisCustomTB);
             ResetAxisMultiplier(yAxisCustomTB);
             minimizeToTrayCB.Checked = _options.MinimizeToTray;
+            startMinimizedCB.Checked = _options.StartMinimized;
         }
 
         private void ResetOptions()
@@ -174,6 +175,11 @@ namespace InvertMouse
         {
             _options.Changed += OptionsOnChanged;
             UpdateMultiplierControls();
+
+            if (_options.StartMinimized)
+            {
+                WindowState = FormWindowState.Minimized;
+            }
         }
 
         private void UpdateState()
@@ -412,6 +418,11 @@ namespace InvertMouse
                 ResetAxisMultiplier(textBox);
                 e.SuppressKeyPress = true;
             }
+        }
+
+        private void startMinimizedCB_CheckedChanged(object sender, EventArgs e)
+        {
+            _options.StartMinimized = startMinimizedCB.Checked;
         }
     }
 }
