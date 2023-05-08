@@ -39,6 +39,27 @@ namespace InvertMouse
             }
         }
 
+        protected override void OnDpiChanged(DpiChangedEventArgs e)
+        {
+            base.OnDpiChanged(e);
+
+            var scaleFactor = (float)e.DeviceDpiNew / e.DeviceDpiOld;
+
+            Scale(new SizeF(scaleFactor, scaleFactor));
+        }
+
+        private void ScaleFormDpi()
+        {
+            float dpiScale;
+
+            using (var gfx = CreateGraphics())
+            {
+                dpiScale = gfx.DpiX / 96.0F;
+            }
+
+            Scale(new SizeF(dpiScale, dpiScale));
+        }
+
         private void OptionsOnChanged(object sender, EventArgs e)
         {
             if (_autoSaveOptions)
@@ -173,6 +194,8 @@ namespace InvertMouse
 
         private void MainForm_Load(object sender, EventArgs e)
         {
+            ScaleFormDpi();
+
             _options.Changed += OptionsOnChanged;
             UpdateMultiplierControls();
 

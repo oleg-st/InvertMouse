@@ -220,9 +220,14 @@ namespace InvertMouse
             // 
             // MainForm
             // 
+            int minWidth = 311;
+            int minHeight = 300;
+            int borderWidth = this.Width - this.ClientSize.Width;
+            int borderHeight = this.Height - this.ClientSize.Height;
+            this.ClientSize = new System.Drawing.Size(minWidth, minHeight);
+            this.MinimumSize = new System.Drawing.Size(minWidth + borderWidth, minHeight + borderHeight);
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 21F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(311, 300);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             this.Controls.Add(this.startMinimizedCB);
             this.Controls.Add(this.xAxisCustomLabel);
             this.Controls.Add(this.xAxisCustomTB);
