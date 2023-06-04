@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Windows.Forms;
+using InvertMouse.KeyBind;
 using Newtonsoft.Json;
 using CheckState = InvertMouse.Inverter.CheckState;
 
@@ -18,6 +19,8 @@ namespace InvertMouse
         private bool _autoSaveOptions = true;
         private readonly string _optionsFilename;
         private readonly JsonSerializer _serializer;
+        private readonly KeyBindManager _keyBindManager;
+        private readonly KeyBinder _keyBinder;
 
         private Options _options;
 
@@ -31,12 +34,66 @@ namespace InvertMouse
             var directoryName = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
             _optionsFilename = Path.Combine(directoryName ?? ".", "Options.json");
             notifyIcon.Icon = Icon;
+            _keyBindManager = new KeyBindManager();
+            _keyBindManager.Fire += (sender, args) =>
+            {
+                if (_invertMouse != null)
+                {
+                    BeginInvoke(new MethodInvoker(() =>
+                    {
+                        if (_invertMouse.IsRunning)
+                        {
+                            Stop();
+                        }
+                        else
+                        {
+                            Start();
+                        }
+                    }));
+                }
+            };
+            _keyBinder = new KeyBinder();
+            _keyBinder.Start += (sender, args) =>
+            {
+                _keyBindManager.Suspend();
+                startStopKeyTB.ForeColor = SystemColors.GrayText;
+            };
+            _keyBinder.Update += (sender, args) =>
+            {
+                startStopKeyTB.Text = _keyBinder.CurrentKey.GetName();
+                startStopKeyTB.Select(startStopKeyTB.Text.Length, 0);
+            };
+            _keyBinder.Cancel += (sender, args) =>
+            {
+                SetStartStopKey(new Key());
+                ActiveControl = null;
+            };
+            _keyBinder.End += (sender, args) =>
+            {
+                startStopKeyTB.ForeColor = SystemColors.WindowText;
+                if (_keyBinder.CurrentKey.HasKey)
+                {
+                    _keyBindManager.Bind(_keyBinder.CurrentKey);
+                    _options.StartStopKey = _keyBinder.CurrentKey;
+                    ActiveControl = null;
+                }
+
+                _keyBindManager.Resume();
+                startStopKeyTB.Text = _options.StartStopKey.ToString();
+            };
 
             if (!LoadOptions())
             {
                 ResetOptions();
                 SetFromOptions();
             }
+        }
+
+        private void SetStartStopKey(Key key)
+        {
+            _keyBindManager.Bind(key);
+            _options.StartStopKey = key;
+            startStopKeyTB.Text = key.ToString();
         }
 
         private void OptionsOnChanged(object sender, EventArgs e)
@@ -66,11 +123,17 @@ namespace InvertMouse
             }
         }
 
-        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+        private void StopAll()
         {
             _options.Changed -= OptionsOnChanged;
 
             Stop();
+            _keyBindManager.Stop();
+        }
+
+        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            StopAll();
         }
 
         private InvertMouseBase GetInvertMouse(DriverType driverType)
@@ -162,6 +225,17 @@ namespace InvertMouse
             ResetAxisMultiplier(yAxisCustomTB);
             minimizeToTrayCB.Checked = _options.MinimizeToTray;
             startMinimizedCB.Checked = _options.StartMinimized;
+            startStopByKeyCB.Checked = _options.StartStopByKey;
+            SetStartStopKey(_options.StartStopKey);
+            if (_options.StartStopByKey)
+            {
+                _keyBindManager.Start();
+            }
+            else
+            {
+                _keyBindManager.Stop();
+            }
+            SaveOptions();
         }
 
         private void ResetOptions()
@@ -179,6 +253,13 @@ namespace InvertMouse
             if (_options.StartMinimized)
             {
                 WindowState = FormWindowState.Minimized;
+            }
+
+            if (!KeyBindManager.IsAdministrator())
+            {
+                shieldIconPB.Visible = true;
+                var tt = new ToolTip();
+                tt.SetToolTip(shieldIconPB, "Administrative privileges required");
             }
         }
 
@@ -423,6 +504,58 @@ namespace InvertMouse
         private void startMinimizedCB_CheckedChanged(object sender, EventArgs e)
         {
             _options.StartMinimized = startMinimizedCB.Checked;
+        }
+
+        private void toggleCB_CheckedChanged(object sender, EventArgs e)
+        {
+            _options.StartStopByKey = startStopByKeyCB.Checked;
+            if (startStopByKeyCB.Checked && !KeyBindManager.IsAdministrator())
+            {
+                if (KeyBindManager.RestartAsAdministrator())
+                {
+                    StopAll();
+                    Environment.Exit(0);
+                    return;
+                }
+
+                startStopByKeyCB.Checked = false;
+            }
+
+            if (startStopByKeyCB.Checked)
+            {
+                _keyBindManager.Start();
+            }
+            else
+            {
+                _keyBindManager.Stop();
+            }
+        }
+
+        private void keyTB_KeyDown(object sender, KeyEventArgs e)
+        {
+            _keyBinder.KeyDown(e.KeyCode);
+            e.SuppressKeyPress = true;
+            e.Handled = true;
+        }
+
+        private void keyTB_KeyUp(object sender, KeyEventArgs e)
+        {
+            _keyBinder.KeyUp(e.KeyCode);
+        }
+
+        private void keyTB_PreviewKeyDown(object sender, PreviewKeyDownEventArgs e)
+        {
+            e.IsInputKey = true;
+        }
+
+        private void keyTB_MouseDown(object sender, MouseEventArgs e)
+        {
+            _keyBinder.MouseDown(e.Button);
+        }
+
+        private void keyTB_MouseUp(object sender, MouseEventArgs e)
+        {
+            _keyBinder.MouseUp(e.Button);
         }
     }
 }

@@ -48,7 +48,11 @@ namespace InvertMouse
             this.xAxisCustomLabel = new System.Windows.Forms.Label();
             this.xAxisCustomTB = new System.Windows.Forms.TextBox();
             this.startMinimizedCB = new System.Windows.Forms.CheckBox();
+            this.startStopByKeyCB = new System.Windows.Forms.CheckBox();
+            this.startStopKeyTB = new System.Windows.Forms.TextBox();
+            this.shieldIconPB = new System.Windows.Forms.PictureBox();
             this.contextMenuStrip.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.shieldIconPB)).BeginInit();
             this.SuspendLayout();
             // 
             // startStopBtn
@@ -218,11 +222,52 @@ namespace InvertMouse
             this.startMinimizedCB.UseVisualStyleBackColor = true;
             this.startMinimizedCB.CheckedChanged += new System.EventHandler(this.startMinimizedCB_CheckedChanged);
             // 
+            // startStopByKeyCB
+            // 
+            this.startStopByKeyCB.AutoSize = true;
+            this.startStopByKeyCB.Location = new System.Drawing.Point(16, 296);
+            this.startStopByKeyCB.Name = "startStopByKeyCB";
+            this.startStopByKeyCB.Size = new System.Drawing.Size(146, 25);
+            this.startStopByKeyCB.TabIndex = 11;
+            this.startStopByKeyCB.Text = "Start/stop by key";
+            this.startStopByKeyCB.UseVisualStyleBackColor = true;
+            this.startStopByKeyCB.CheckedChanged += new System.EventHandler(this.toggleCB_CheckedChanged);
+            // 
+            // startStopKeyTB
+            // 
+            this.startStopKeyTB.BackColor = System.Drawing.SystemColors.Window;
+            this.startStopKeyTB.Location = new System.Drawing.Point(16, 327);
+            this.startStopKeyTB.Name = "startStopKeyTB";
+            this.startStopKeyTB.ReadOnly = true;
+            this.startStopKeyTB.ShortcutsEnabled = false;
+            this.startStopKeyTB.Size = new System.Drawing.Size(282, 29);
+            this.startStopKeyTB.TabIndex = 12;
+            this.startStopKeyTB.KeyDown += new System.Windows.Forms.KeyEventHandler(this.keyTB_KeyDown);
+            this.startStopKeyTB.KeyUp += new System.Windows.Forms.KeyEventHandler(this.keyTB_KeyUp);
+            this.startStopKeyTB.MouseDown += new System.Windows.Forms.MouseEventHandler(this.keyTB_MouseDown);
+            this.startStopKeyTB.MouseUp += new System.Windows.Forms.MouseEventHandler(this.keyTB_MouseUp);
+            this.startStopKeyTB.PreviewKeyDown += new System.Windows.Forms.PreviewKeyDownEventHandler(this.keyTB_PreviewKeyDown);
+            // 
+            // shieldIconPB
+            // 
+            this.shieldIconPB.Image = ((System.Drawing.Image)(resources.GetObject("shieldIconPB.Image")));
+            this.shieldIconPB.Location = new System.Drawing.Point(161, 301);
+            this.shieldIconPB.Name = "shieldIconPB";
+            this.shieldIconPB.Size = new System.Drawing.Size(16, 16);
+            this.shieldIconPB.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.shieldIconPB.TabIndex = 13;
+            this.shieldIconPB.TabStop = false;
+            this.shieldIconPB.Visible = false;
+            this.shieldIconPB.WaitOnLoad = true;
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 21F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(311, 300);
+            this.ClientSize = new System.Drawing.Size(311, 371);
+            this.Controls.Add(this.shieldIconPB);
+            this.Controls.Add(this.startStopKeyTB);
+            this.Controls.Add(this.startStopByKeyCB);
             this.Controls.Add(this.startMinimizedCB);
             this.Controls.Add(this.xAxisCustomLabel);
             this.Controls.Add(this.xAxisCustomTB);
@@ -248,6 +293,7 @@ namespace InvertMouse
             this.Load += new System.EventHandler(this.MainForm_Load);
             this.Resize += new System.EventHandler(this.MainForm_Resize);
             this.contextMenuStrip.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.shieldIconPB)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -272,6 +318,9 @@ namespace InvertMouse
         private System.Windows.Forms.Label xAxisCustomLabel;
         private System.Windows.Forms.TextBox xAxisCustomTB;
         private System.Windows.Forms.CheckBox startMinimizedCB;
+        private System.Windows.Forms.CheckBox startStopByKeyCB;
+        private System.Windows.Forms.TextBox startStopKeyTB;
+        private System.Windows.Forms.PictureBox shieldIconPB;
     }
 }
 

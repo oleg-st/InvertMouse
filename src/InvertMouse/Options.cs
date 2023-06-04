@@ -1,5 +1,6 @@
 ﻿using System;
 using InvertMouse.Inverter;
+using InvertMouse.KeyBind;
 
 namespace InvertMouse
 {
@@ -140,9 +141,39 @@ namespace InvertMouse
             }
         }
 
+        private bool _startStopByKey = false;
+
+        public bool StartStopByKey
+        {
+            get => _startStopByKey;
+            set
+            {
+                if (_startStopByKey != value)
+                {
+                    _startStopByKey = value;
+                    OnChanged();
+                }
+            }
+        }
+
+        private Key _startStopKey;
+
+        public Key StartStopKey
+        {
+            get => _startStopKey;
+            set
+            {
+                if (_startStopKey != value)
+                {
+                    _startStopKey = value;
+                    OnChanged();
+                }
+            }
+        }
+
         public event EventHandler Changed;
 
-        protected virtual void OnChanged()
+        private void OnChanged()
         {
             Changed?.Invoke(this, EventArgs.Empty);
         }

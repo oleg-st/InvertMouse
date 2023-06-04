@@ -53,12 +53,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="KeyBind\Key.cs" />
+    <Compile Include="KeyBind\KeyBinder.cs" />
     <Compile Include="Options.cs" />
     <Compile Include="Inverter\CheckState.cs" />
     <Compile Include="Inverter\DriverType.cs" />
     <Compile Include="Inverter\InvertMouseFactory.cs" />
     <Compile Include="Inverter\InvertMouseBase.cs" />
     <Compile Include="Inverter\InvertMouseRawAccel.cs" />
+    <Compile Include="KeyBind\KeyBindManager.cs" />
     <Compile Include="Utils\WinAPI.cs" />
     <Compile Include="Utils\InterceptionLib.cs" />
     <Compile Include="Inverter\InvertMouseInterception.cs" />

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using System.Text;
+using System.Windows.Forms;
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMember.Local
@@ -31,6 +33,24 @@ namespace InvertMouse.Utils
         {
             SetPriorityClass(GetCurrentProcess(), PriorityClass.HIGH_PRIORITY_CLASS);
         }
+
+        [DllImport(User32)]
+        public static extern short GetAsyncKeyState(Keys vKey);
+
+        [DllImport(User32)]
+        public static extern short GetKeyState(Keys vKey);
+
+
+        [DllImport(User32)]
+        public static extern uint MapVirtualKey(uint uCode, uint uMapType);
+
+        [DllImport(User32)]
+        public static extern int ToUnicodeEx(uint wVirtKey, uint wScanCode, byte[] lpKeyState,
+            [Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder pwszBuff, int cchBuff, uint wFlags,
+            IntPtr dwhkl);
+
+        [DllImport(User32)]
+        public static extern IntPtr GetKeyboardLayout(int idThread);
 
         public const int CURSOR_SHOWING = 0x00000001;
         public const int CURSOR_SUPPRESSED = 0x00000002;
