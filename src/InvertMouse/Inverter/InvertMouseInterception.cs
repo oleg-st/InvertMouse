@@ -55,7 +55,7 @@ namespace InvertMouse.Inverter
                     if (
                         (stroke.flags &
                          (ushort)InterceptionLib.InterceptionMouseFlag.INTERCEPTION_MOUSE_MOVE_ABSOLUTE) == 0
-                        && (!WhenCursorIsHidden || IsCursorHidden())
+                        && IsActive()
                     )
                     {
                         stroke.x = (int) Math.Round(stroke.x * XMultiplier);

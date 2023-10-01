@@ -171,6 +171,21 @@ namespace InvertMouse
             }
         }
 
+        private string _activeTitlePrefix;
+
+        public string ActiveTitlePrefix
+        {
+            get => _activeTitlePrefix;
+            set
+            {
+                if (_activeTitlePrefix != value)
+                {
+                    _activeTitlePrefix = value;
+                    OnChanged();
+                }
+            }
+        }
+
         public event EventHandler Changed;
 
         private void OnChanged()

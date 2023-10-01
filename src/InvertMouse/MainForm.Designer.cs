@@ -1,4 +1,4 @@
-﻿
+
 namespace InvertMouse
 {
     partial class MainForm
@@ -31,6 +31,7 @@ namespace InvertMouse
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
+            System.Windows.Forms.Label label1;
             this.startStopBtn = new System.Windows.Forms.Button();
             this.stateLabel = new System.Windows.Forms.Label();
             this.cursorHiddenCB = new System.Windows.Forms.CheckBox();
@@ -51,6 +52,8 @@ namespace InvertMouse
             this.startStopByKeyCB = new System.Windows.Forms.CheckBox();
             this.startStopKeyTB = new System.Windows.Forms.TextBox();
             this.shieldIconPB = new System.Windows.Forms.PictureBox();
+            this.activeTitlePrefix = new System.Windows.Forms.TextBox();
+            label1 = new System.Windows.Forms.Label();
             this.contextMenuStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.shieldIconPB)).BeginInit();
             this.SuspendLayout();
@@ -260,11 +263,30 @@ namespace InvertMouse
             this.shieldIconPB.Visible = false;
             this.shieldIconPB.WaitOnLoad = true;
             // 
+            // activeTitlePrefix
+            // 
+            this.activeTitlePrefix.Location = new System.Drawing.Point(146, 362);
+            this.activeTitlePrefix.Name = "activeTitlePrefix";
+            this.activeTitlePrefix.Size = new System.Drawing.Size(152, 29);
+            this.activeTitlePrefix.TabIndex = 16;
+            this.activeTitlePrefix.TextChanged += new System.EventHandler(this.activeTitlePrefix_TextChanged);
+            // 
+            // label1
+            // 
+            label1.AutoSize = true;
+            label1.Location = new System.Drawing.Point(12, 365);
+            label1.Name = "label1";
+            label1.Size = new System.Drawing.Size(128, 21);
+            label1.TabIndex = 15;
+            label1.Text = "Active title &prefix:";
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 21F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(311, 371);
+            this.ClientSize = new System.Drawing.Size(311, 404);
+            this.Controls.Add(label1);
+            this.Controls.Add(this.activeTitlePrefix);
             this.Controls.Add(this.shieldIconPB);
             this.Controls.Add(this.startStopKeyTB);
             this.Controls.Add(this.startStopByKeyCB);
@@ -321,6 +343,7 @@ namespace InvertMouse
         private System.Windows.Forms.CheckBox startStopByKeyCB;
         private System.Windows.Forms.TextBox startStopKeyTB;
         private System.Windows.Forms.PictureBox shieldIconPB;
+        private System.Windows.Forms.TextBox activeTitlePrefix;
     }
 }
 
