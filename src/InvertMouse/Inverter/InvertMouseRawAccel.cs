@@ -39,7 +39,7 @@ namespace InvertMouse.Inverter
 
             while (IsRunning)
             {
-                UpdateActive(!WhenCursorIsHidden || IsCursorHidden());
+                UpdateActive(IsActive());
                 Thread.Sleep(50);
             }
         }

@@ -226,6 +226,7 @@ namespace InvertMouse
             minimizeToTrayCB.Checked = _options.MinimizeToTray;
             startMinimizedCB.Checked = _options.StartMinimized;
             startStopByKeyCB.Checked = _options.StartStopByKey;
+            activeTitlePrefix.Text = _options.ActiveTitlePrefix;
             SetStartStopKey(_options.StartStopKey);
             if (_options.StartStopByKey)
             {
@@ -556,6 +557,15 @@ namespace InvertMouse
         private void keyTB_MouseUp(object sender, MouseEventArgs e)
         {
             _keyBinder.MouseUp(e.Button);
+        }
+
+        private void activeTitlePrefix_TextChanged(object sender, EventArgs e)
+        {
+            if (_invertMouse != null)
+            {
+                _options.ActiveTitlePrefix = activeTitlePrefix.Text;
+                _invertMouse.ActiveTitlePrefix = _options.ActiveTitlePrefix;
+            }
         }
     }
 }
