@@ -6,9 +6,9 @@ using System.Windows.Forms;
 
 namespace InvertMouse
 {
-    public partial class DriverForm : Form
+    public partial class MainForm : Form
     {
-        private readonly DriverInstaller _driverInstaller;
+        private readonly DriverInstaller.Utils.DriverInstaller _driverInstaller;
 
         private static string GetDriverPath()
         {
@@ -24,22 +24,23 @@ namespace InvertMouse
                 return null;
             }
 
-            return Path.Combine(directoryName, "driver", architecture, DriverInstaller.DriverFileName);
+            return Path.Combine(directoryName, "driver", architecture, DriverInstaller.Utils.DriverInstaller.DriverFileName);
         }
 
-        public DriverForm()
+        public MainForm()
         {
             InitializeComponent();
-            _driverInstaller = new DriverInstaller();
-            DialogResult = DialogResult.OK;
+            _driverInstaller = new DriverInstaller.Utils.DriverInstaller();
         }
 
         private bool Raise()
         {
             if (!AdminManager.IsAdministrator())
             {
-                DialogResult = DialogResult.Abort;
-                Close();
+                if (AdminManager.RestartAsAdministrator())
+                {
+                    Close();
+                }
                 return false;
             }
 
@@ -55,31 +56,40 @@ namespace InvertMouse
                 uninstallBtn.Image = null;
             }
 
-            var isInstalled = _driverInstaller.IsInstalled();
-            var isLoaded = _driverInstaller.IsLoaded();
-
-            installBtn.Enabled = !isInstalled;
-            uninstallBtn.Enabled = isInstalled;
-
             string state;
-            if (isInstalled)
+            var path = GetDriverPath();
+            if (path == null || !File.Exists(path))
             {
-                state = "Driver is installed";
-                if (isLoaded)
-                {
-                    state += " and loaded";
-                }
-                else
-                {
-                    state += ", reboot needed to load";
-                }
+                state = $"No suitable driver found for {WinAPI.GetArchitecture() ?? "unknown"}";
+                installBtn.Enabled = uninstallBtn.Enabled = false;
             }
             else
             {
-                state = "Driver is not installed";
-                if (isLoaded)
+                var isInstalled = _driverInstaller.IsInstalled();
+                var isLoaded = _driverInstaller.IsLoaded();
+
+                installBtn.Enabled = !isInstalled;
+                uninstallBtn.Enabled = isInstalled;
+
+                if (isInstalled)
                 {
-                    state += ", reboot needed to unload";
+                    state = "Driver is installed";
+                    if (isLoaded)
+                    {
+                        state += " and loaded";
+                    }
+                    else
+                    {
+                        state += ", reboot needed to load";
+                    }
+                }
+                else
+                {
+                    state = "Driver is not installed";
+                    if (isLoaded)
+                    {
+                        state += ", reboot needed to unload";
+                    }
                 }
             }
 

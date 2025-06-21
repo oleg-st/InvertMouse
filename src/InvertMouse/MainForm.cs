@@ -4,10 +4,13 @@ using InvertMouse.Utils;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Windows.Forms;
+using System.Xml.Linq;
 using CheckState = InvertMouse.Inverter.CheckState;
 
 namespace InvertMouse
@@ -559,17 +562,28 @@ namespace InvertMouse
             _keyBinder.MouseUp(e.Button);
         }
 
-        private void OpenDriver()
+        private bool OpenDriver()
         {
-            var driverForm = new DriverForm();
-            var dialogResult = driverForm.ShowDialog(this);
-            if (dialogResult == DialogResult.Abort)
+            var path = Process.GetCurrentProcess().MainModule?.FileName;
+            var directoryName = Path.GetDirectoryName(path);
+            if (directoryName == null)
             {
-                if (AdminManager.RestartAsAdministrator())
-                {
-                    StopAll();
-                    Environment.Exit(0);
-                }
+                return false;
+            }
+            var exeName = Path.Combine(directoryName, "DriverInstaller.exe");
+            var startInfo = new ProcessStartInfo(exeName)
+            {
+                UseShellExecute = true
+            };
+            try
+            {
+                Process.Start(startInfo);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Cannot start {exeName}: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                return false;
             }
         }
 

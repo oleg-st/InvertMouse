@@ -7,7 +7,7 @@ using System.Text;
 // ReSharper disable IdentifierTypo
 // ReSharper disable InconsistentNaming
 
-namespace InvertMouse.Utils
+namespace DriverInstaller.Utils
 {
     internal class DriverInstaller
     {
