@@ -1,0 +1,35 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36127.28
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "InvertMouse", "InvertMouse.vcxproj", "{8D30C796-EC3F-F17D-66B9-EDB07BA3CDD0}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|ARM64 = Debug|ARM64
+		Debug|x64 = Debug|x64
+		Release|ARM64 = Release|ARM64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8D30C796-EC3F-F17D-66B9-EDB07BA3CDD0}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{8D30C796-EC3F-F17D-66B9-EDB07BA3CDD0}.Debug|ARM64.Build.0 = Debug|ARM64
+		{8D30C796-EC3F-F17D-66B9-EDB07BA3CDD0}.Debug|ARM64.Deploy.0 = Debug|ARM64
+		{8D30C796-EC3F-F17D-66B9-EDB07BA3CDD0}.Debug|x64.ActiveCfg = Debug|x64
+		{8D30C796-EC3F-F17D-66B9-EDB07BA3CDD0}.Debug|x64.Build.0 = Debug|x64
+		{8D30C796-EC3F-F17D-66B9-EDB07BA3CDD0}.Debug|x64.Deploy.0 = Debug|x64
+		{8D30C796-EC3F-F17D-66B9-EDB07BA3CDD0}.Release|ARM64.ActiveCfg = Release|ARM64
+		{8D30C796-EC3F-F17D-66B9-EDB07BA3CDD0}.Release|ARM64.Build.0 = Release|ARM64
+		{8D30C796-EC3F-F17D-66B9-EDB07BA3CDD0}.Release|ARM64.Deploy.0 = Release|ARM64
+		{8D30C796-EC3F-F17D-66B9-EDB07BA3CDD0}.Release|x64.ActiveCfg = Release|x64
+		{8D30C796-EC3F-F17D-66B9-EDB07BA3CDD0}.Release|x64.Build.0 = Release|x64
+		{8D30C796-EC3F-F17D-66B9-EDB07BA3CDD0}.Release|x64.Deploy.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {31A9F278-8AF5-4BFE-8C8B-3201362B69ED}
+	EndGlobalSection
+EndGlobal
