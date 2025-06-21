@@ -37,6 +37,9 @@
   <PropertyGroup>
     <ApplicationIcon>mouse.ico</ApplicationIcon>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
@@ -53,8 +56,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Inverter\InvertMouseDriver.cs" />
     <Compile Include="KeyBind\Key.cs" />
     <Compile Include="KeyBind\KeyBinder.cs" />
+    <Compile Include="DriverForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DriverForm.Designer.cs">
+      <DependentUpon>DriverForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Utils\AdminManager.cs" />
     <Compile Include="Options.cs" />
     <Compile Include="Inverter\CheckState.cs" />
     <Compile Include="Inverter\DriverType.cs" />
@@ -62,6 +73,8 @@
     <Compile Include="Inverter\InvertMouseBase.cs" />
     <Compile Include="Inverter\InvertMouseRawAccel.cs" />
     <Compile Include="KeyBind\KeyBindManager.cs" />
+    <Compile Include="Utils\DriverInstaller.cs" />
+    <Compile Include="Utils\InvertMouseControl.cs" />
     <Compile Include="Utils\WinAPI.cs" />
     <Compile Include="Utils\InterceptionLib.cs" />
     <Compile Include="Inverter\InvertMouseInterception.cs" />
@@ -73,6 +86,9 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="DriverForm.resx">
+      <DependentUpon>DriverForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -87,6 +103,10 @@
       <DesignTime>True</DesignTime>
     </Compile>
     <None Include="app.config" />
+    <None Include="app.manifest" />
+    <Content Include="driver\x64\InvertMouse.sys">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="lib\x64\interception.lib" />
     <None Include="lib\x86\interception.lib" />
     <None Include="packages.config" />

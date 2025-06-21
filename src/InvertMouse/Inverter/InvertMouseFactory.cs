@@ -14,6 +14,9 @@ namespace InvertMouse.Inverter
                 case DriverType.RawAccel:
                     return new InvertMouseRawAccel();
 
+                case DriverType.InvertMouse:
+                    return new InvertMouseDriver();
+
                 default:
                     throw new NotSupportedException($"Driver type is not supported {driverType}");
             }

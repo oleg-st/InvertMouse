@@ -12,6 +12,7 @@
 #include <initguid.h> // needed for devpkey.h to parse properly
 #include <devpkey.h>
 #include <hidsdi.h>
+#include <string>
 
 inline constexpr size_t MAX_DEV_ID_LEN = 200;
 inline constexpr size_t MAX_NAME_LEN = 256;

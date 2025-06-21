@@ -1,12 +1,13 @@
 ﻿using InvertMouse.Inverter;
+using InvertMouse.KeyBind;
+using InvertMouse.Utils;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Windows.Forms;
-using InvertMouse.KeyBind;
-using Newtonsoft.Json;
 using CheckState = InvertMouse.Inverter.CheckState;
 
 namespace InvertMouse
@@ -255,7 +256,7 @@ namespace InvertMouse
                 WindowState = FormWindowState.Minimized;
             }
 
-            if (!KeyBindManager.IsAdministrator())
+            if (!AdminManager.IsAdministrator())
             {
                 shieldIconPB.Visible = true;
                 var tt = new ToolTip();
@@ -509,9 +510,9 @@ namespace InvertMouse
         private void toggleCB_CheckedChanged(object sender, EventArgs e)
         {
             _options.StartStopByKey = startStopByKeyCB.Checked;
-            if (startStopByKeyCB.Checked && !KeyBindManager.IsAdministrator())
+            if (startStopByKeyCB.Checked && !AdminManager.IsAdministrator())
             {
-                if (KeyBindManager.RestartAsAdministrator())
+                if (AdminManager.RestartAsAdministrator())
                 {
                     StopAll();
                     Environment.Exit(0);
@@ -556,6 +557,25 @@ namespace InvertMouse
         private void keyTB_MouseUp(object sender, MouseEventArgs e)
         {
             _keyBinder.MouseUp(e.Button);
+        }
+
+        private void OpenDriver()
+        {
+            var driverForm = new DriverForm();
+            var dialogResult = driverForm.ShowDialog(this);
+            if (dialogResult == DialogResult.Abort)
+            {
+                if (AdminManager.RestartAsAdministrator())
+                {
+                    StopAll();
+                    Environment.Exit(0);
+                }
+            }
+        }
+
+        private void invertMouseDriverBtn_Click(object sender, EventArgs e)
+        {
+            OpenDriver();
         }
     }
 }
