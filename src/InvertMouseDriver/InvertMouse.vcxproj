@@ -156,6 +156,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="InvertMouse.h" />
+    <ClInclude Include="version.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="InvertMouse.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
