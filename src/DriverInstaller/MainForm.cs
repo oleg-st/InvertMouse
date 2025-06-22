@@ -68,8 +68,9 @@ namespace InvertMouse
                 var isInstalled = _driverInstaller.IsInstalled();
                 var isLoaded = _driverInstaller.IsLoaded();
 
-                installBtn.Enabled = !isInstalled;
-                uninstallBtn.Enabled = isInstalled;
+                installBtn.Enabled = true;
+                installBtn.Text = isInstalled ? "Reinstall" : "Install";
+                uninstallBtn.Enabled = _driverInstaller.IsInstalledPartially();
 
                 if (isInstalled)
                 {

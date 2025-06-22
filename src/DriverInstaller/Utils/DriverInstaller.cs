@@ -208,13 +208,12 @@ namespace DriverInstaller.Utils
 
         public bool IsInstalled()
         {
-            if (!File.Exists(DriverDestPath))
-            {
-                return false;
-            }
+            return File.Exists(DriverDestPath) && HasDriverFilter();
+        }
 
-            var value = GetFiltersValue();
-            return value != null && GetDriverPosition(value) >= 0;
+        public bool IsInstalledPartially()
+        {
+            return File.Exists(DriverDestPath) || HasDriverFilter();
         }
 
         private string GetFiltersValue()
@@ -238,6 +237,12 @@ namespace DriverInstaller.Utils
             var guid = GUID_DEVCLASS_MOUSE;
             var buffer = Encoding.Unicode.GetBytes(value);
             return SetupDiSetClassRegistryPropertyW(ref guid, SPCRP_UPPERFILTERS, buffer, (uint)buffer.Length, IntPtr.Zero, IntPtr.Zero);
+        }
+
+        private bool HasDriverFilter()
+        {
+            var value = GetFiltersValue();
+            return value != null && GetDriverPosition(value) >= 0;
         }
 
         private int GetDriverPosition(string value)
