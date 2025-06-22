@@ -1,4 +1,5 @@
 #include "InvertMouse.h"
+#include "version.h"
 
 #ifdef ALLOC_PRAGMA
 #pragma alloc_text (INIT, DriverEntry)
@@ -109,6 +110,15 @@ InvertMouseControl(
                 WriteDelay();
             }
             global.settings = *in;
+        }
+        break;
+    }
+    case IOCTL_INVERTMOUSE_GET_VERSION: {
+        PDRIVER_VERSION out;
+        status = WdfRequestRetrieveOutputBuffer(Request, sizeof(DRIVER_VERSION), (PVOID*)&out, NULL);
+        if (NT_SUCCESS(status)) {
+            *out = { VERSION };
+            bytes_out = sizeof(DRIVER_VERSION);
         }
         break;
     }

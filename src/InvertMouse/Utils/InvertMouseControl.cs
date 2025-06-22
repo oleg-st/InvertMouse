@@ -22,6 +22,9 @@ namespace InvertMouse.Utils
         static readonly uint IOCTL_INVERTMOUSE_SET_SETTINGS =
             CTL_CODE(FILE_DEVICE_MOUSE, 0x801, METHOD_BUFFERED, FILE_ANY_ACCESS);
 
+        static readonly uint IOCTL_INVERTMOUSE_GET_VERSION =
+            CTL_CODE(FILE_DEVICE_MOUSE, 0x802, METHOD_BUFFERED, FILE_ANY_ACCESS);
+
         [StructLayout(LayoutKind.Sequential)]
         public struct INVERTMOUSE_SETTINGS
         {
@@ -29,6 +32,15 @@ namespace InvertMouse.Utils
             public bool enable;
             public double multiplier_x;
             public double multiplier_y;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct INVERTMOUSE_VERSION
+        {
+            public int major;
+            public int minor;
+            public int build;
+            public int revision;
         }
 
         private const string Kernel32 = "kernel32.dll";
@@ -46,6 +58,17 @@ namespace InvertMouse.Utils
             IntPtr inBuffer,
             int nInBufferSize,
             [Out] out INVERTMOUSE_SETTINGS outBuffer,
+            int nOutBufferSize,
+            out int pBytesReturned,
+            IntPtr lpOverlapped);
+
+        [DllImport(Kernel32, SetLastError = true)]
+        static extern bool DeviceIoControl(
+            SafeFileHandle hDevice,
+            uint dwIoControlCode,
+            IntPtr inBuffer,
+            int nInBufferSize,
+            [Out] out INVERTMOUSE_VERSION outBuffer,
             int nOutBufferSize,
             out int pBytesReturned,
             IntPtr lpOverlapped);
@@ -95,10 +118,25 @@ namespace InvertMouse.Utils
                 return false;
             }
 
-            int size = Marshal.SizeOf<INVERTMOUSE_SETTINGS>();
+            var size = Marshal.SizeOf<INVERTMOUSE_SETTINGS>();
             return DeviceIoControl(_controlDevice, IOCTL_INVERTMOUSE_GET_SETTINGS,
                 IntPtr.Zero, 0,
                 out settings, size,
+                out var returned, IntPtr.Zero) && returned == size;
+        }
+
+        public bool GetVersion(out INVERTMOUSE_VERSION version)
+        {
+            if (_controlDevice == null)
+            {
+                version = default;
+                return false;
+            }
+
+            var size = Marshal.SizeOf<INVERTMOUSE_VERSION>();
+            return DeviceIoControl(_controlDevice, IOCTL_INVERTMOUSE_GET_VERSION,
+                IntPtr.Zero, 0,
+                out version, size,
                 out var returned, IntPtr.Zero) && returned == size;
         }
 
