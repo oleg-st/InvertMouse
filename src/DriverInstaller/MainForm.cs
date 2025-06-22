@@ -1,14 +1,17 @@
-﻿using InvertMouse.Utils;
-using System;
+﻿using System;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
+using InvertMouse.Utils;
 
-namespace InvertMouse
+namespace DriverInstaller
 {
     public partial class MainForm : Form
     {
-        private readonly DriverInstaller.Utils.DriverInstaller _driverInstaller;
+        private readonly Utils.DriverInstaller _driverInstaller;
+        private const string InstallAction = "/install";
+        private const string UninstallAction = "/uninstall";
 
         private static string GetDriverPath()
         {
@@ -24,20 +27,20 @@ namespace InvertMouse
                 return null;
             }
 
-            return Path.Combine(directoryName, "driver", architecture, DriverInstaller.Utils.DriverInstaller.DriverFileName);
+            return Path.Combine(directoryName, "driver", architecture, Utils.DriverInstaller.DriverFileName);
         }
 
         public MainForm()
         {
             InitializeComponent();
-            _driverInstaller = new DriverInstaller.Utils.DriverInstaller();
+            _driverInstaller = new Utils.DriverInstaller();
         }
 
-        private bool Raise()
+        private bool Raise(string action)
         {
             if (!AdminManager.IsAdministrator())
             {
-                if (AdminManager.RestartAsAdministrator())
+                if (AdminManager.RestartAsAdministrator(action))
                 {
                     Close();
                 }
@@ -56,10 +59,11 @@ namespace InvertMouse
                 uninstallBtn.Image = null;
             }
 
-            string state;
+            string state, mark;
             var path = GetDriverPath();
             if (path == null || !File.Exists(path))
             {
+                mark = "\u274c";
                 state = $"No suitable driver found for {WinAPI.GetArchitecture() ?? "unknown"}";
                 installBtn.Enabled = uninstallBtn.Enabled = false;
             }
@@ -77,34 +81,48 @@ namespace InvertMouse
                     state = "Driver is installed";
                     if (isLoaded)
                     {
+                        mark = "\u2714";
                         state += " and loaded";
                     }
                     else
                     {
+                        mark = "\u231b";
                         state += ", reboot needed to load";
                     }
                 }
                 else
                 {
+                    mark = "\u274c";
                     state = "Driver is not installed";
                     if (isLoaded)
                     {
+                        mark = "\u231b";
                         state += ", reboot needed to unload";
                     }
                 }
             }
 
-            stateLabel.Text = state;
+            stateLabel.Text = $"{mark} {state}";
         }
 
         private void DriverForm_Load(object sender, EventArgs e)
         {
             UpdateState();
+
+            var args = Environment.GetCommandLineArgs();
+            if (args.Contains(InstallAction))
+            {
+                DoInstall();
+            }
+            else if (args.Contains(UninstallAction))
+            {
+                DoUninstall();
+            }
         }
 
-        private void installBtn_Click(object sender, EventArgs e)
+        private void DoInstall()
         {
-            if (!Raise())
+            if (!Raise(InstallAction))
             {
                 return;
             }
@@ -128,9 +146,9 @@ namespace InvertMouse
             UpdateState();
         }
 
-        private void uninstallBtn_Click(object sender, EventArgs e)
+        private void DoUninstall()
         {
-            if (!Raise())
+            if (!Raise(UninstallAction))
             {
                 return;
             }
@@ -145,6 +163,16 @@ namespace InvertMouse
             }
 
             UpdateState();
+        }
+
+        private void installBtn_Click(object sender, EventArgs e)
+        {
+            DoInstall();
+        }
+
+        private void uninstallBtn_Click(object sender, EventArgs e)
+        {
+            DoUninstall();
         }
     }
 }

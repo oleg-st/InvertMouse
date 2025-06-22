@@ -1,5 +1,5 @@
 ﻿
-namespace InvertMouse
+namespace DriverInstaller
 {
     partial class MainForm
     {

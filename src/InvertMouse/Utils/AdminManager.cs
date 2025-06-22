@@ -8,13 +8,13 @@ namespace InvertMouse.Utils
 {
     public static class AdminManager
     {
-        public static bool RestartAsAdministrator()
+        public static bool RestartAsAdministrator(string commandLine = null)
         {
             var exeName = Process.GetCurrentProcess().MainModule?.FileName;
             var startInfo = new ProcessStartInfo(exeName)
             {
                 Verb = "runas",
-                Arguments = Environment.CommandLine,
+                Arguments = commandLine ?? Environment.CommandLine,
                 UseShellExecute = true
             };
             try

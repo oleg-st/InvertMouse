@@ -271,7 +271,7 @@ namespace InvertMouse
             this.invertMouseDriverBtn.Name = "invertMouseDriverBtn";
             this.invertMouseDriverBtn.Size = new System.Drawing.Size(285, 35);
             this.invertMouseDriverBtn.TabIndex = 14;
-            this.invertMouseDriverBtn.Text = "InvertMouseDriver";
+            this.invertMouseDriverBtn.Text = "InvertMouse driver";
             this.invertMouseDriverBtn.UseVisualStyleBackColor = true;
             this.invertMouseDriverBtn.Click += new System.EventHandler(this.invertMouseDriverBtn_Click);
             // 
