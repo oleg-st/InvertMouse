@@ -32,8 +32,7 @@ typedef struct _DEVICE_EXTENSION {
 typedef struct _DRIVER_VERSION {
     int major;
     int minor;
-    int build;
-    int revision;
+    int patch;
 } DRIVER_VERSION, * PDRIVER_VERSION;
 
 WDF_DECLARE_CONTEXT_TYPE_WITH_NAME(DEVICE_EXTENSION, FilterGetData)

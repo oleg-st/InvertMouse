@@ -287,8 +287,12 @@ namespace InvertMouse
                     startStopBtn.Enabled = false;
                     break;
                 case CheckState.Ok:
-                    stateLabel.Text =
-                        _invertMouse.IsRunning ? $"Running, delay: {_invertMouse.Delay} ms" : "Ready to run";
+                    var state = _invertMouse.IsRunning ? $"Running, delay: {_invertMouse.Delay} ms" : "Ready to run";
+                    if (!string.IsNullOrEmpty(_invertMouse.Version))
+                    {
+                        state += $" (v{_invertMouse.Version})";
+                    }
+                    stateLabel.Text = state;
                     startStopBtn.Enabled = true;
                     break;
             }

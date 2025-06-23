@@ -20,6 +20,8 @@ namespace InvertMouse.Inverter
         public const decimal InvertMultiplier = -1;
         public const decimal IdentityMultiplier = 1;
 
+        public string Version { get; protected set; }
+
         protected bool IsCursorHidden()
         {
             var cursorInfo = new WinAPI.CURSORINFO { cbSize = Marshal.SizeOf(typeof(WinAPI.CURSORINFO)) };

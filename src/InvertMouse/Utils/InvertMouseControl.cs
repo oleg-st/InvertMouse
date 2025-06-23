@@ -39,8 +39,7 @@ namespace InvertMouse.Utils
         {
             public int major;
             public int minor;
-            public int build;
-            public int revision;
+            public int patch;
         }
 
         private const string Kernel32 = "kernel32.dll";

@@ -58,13 +58,18 @@ namespace InvertMouse.Inverter
         private void Check()
         {
             Error = "";
-            if (!_invertMouseControl.Open() || !_invertMouseControl.GetSettings(out _) || !_invertMouseControl.GetVersion(out _))
+            if (!_invertMouseControl.Open() || !_invertMouseControl.GetSettings(out _) || !_invertMouseControl.GetVersion(out var version))
             {
                 State = CheckState.DriverNotInstalled;
                 return;
             }
 
             State = CheckState.Ok;
+            Version = $"{version.major}.{version.minor}";
+            if (version.patch != 0)
+            {
+                Version += $".{version.patch}";
+            }
         }
 
         public override void Stop()
