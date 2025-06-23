@@ -36,12 +36,15 @@ InvertMouseCallback(
         !(InputDataStart->Flags & MOUSE_MOVE_ABSOLUTE) &&
         global.settings.enable)
     {
+        auto multiplierX = global.settings.multiplier_x;
+        auto multiplierY = global.settings.multiplier_y;
+
         for (auto it = InputDataStart; it != InputDataEnd; ++it) {
             // Only modify packets with actual movement
-            if (it->LastX != 0)
-                it->LastX = static_cast<LONG>(it->LastX * global.settings.multiplier_x);
-            if (it->LastY != 0)
-                it->LastY = static_cast<LONG>(it->LastY * global.settings.multiplier_y);
+            if (it->LastX || it->LastY) {
+                it->LastX = static_cast<LONG>(it->LastX * multiplierX);
+                it->LastY = static_cast<LONG>(it->LastY * multiplierY);
+            }
         }
     }
 
@@ -51,7 +54,7 @@ InvertMouseCallback(
         InputDataStart,
         InputDataEnd,
         InputDataConsumed
-        );;
+        );
 }
 
 // Applies a 1-second delay (for anti-cheat protection when multipliers change)
