@@ -13,6 +13,7 @@
 struct {
     bool initialized;
     INVERTMOUSE_SETTINGS settings;
+    WDFWAITLOCK settings_lock;
 } global = {};
 
 extern "C" PULONG InitSafeBootMode;
@@ -57,12 +58,12 @@ InvertMouseCallback(
         );
 }
 
-// Applies a 1-second delay (for anti-cheat protection when multipliers change)
+// Applies a delay (for anti-cheat protection when settings change)
 VOID
-WriteDelay()
+WriteDelay(int delayMs)
 {
     LARGE_INTEGER interval;
-    interval.QuadPart = -10000 * 1000; // 1 second in 100-ns intervals (negative for relative time)
+    interval.QuadPart = -10000 * delayMs;
     KeDelayExecutionThread(KernelMode, FALSE, &interval);
 }
 
@@ -106,13 +107,20 @@ InvertMouseControl(
         PINVERTMOUSE_SETTINGS in;
         status = WdfRequestRetrieveInputBuffer(Request, sizeof(INVERTMOUSE_SETTINGS), (PVOID*)&in, NULL);
         if (NT_SUCCESS(status)) {
-            // Apply delay only when multipliers change
-            if (in->multiplier_x != global.settings.multiplier_x ||
-                in->multiplier_y != global.settings.multiplier_y)
+            // Prevents rapid toggling or adjustment of settings by serializing all SET requests with a wait lock and applying a delay (anti-cheat protection)
+            WdfWaitLockAcquire(global.settings_lock, NULL);
+            int delayMs = WRITE_DELAY_LONG;
+
+            // Apply short delay if multipliers do not change
+            if (in->multiplier_x == global.settings.multiplier_x
+                && in->multiplier_y == global.settings.multiplier_y)
             {
-                WriteDelay();
+                delayMs = WRITE_DELAY_SHORT;
             }
             global.settings = *in;
+
+            WriteDelay(delayMs);
+            WdfWaitLockRelease(global.settings_lock);
         }
         break;
     }
@@ -287,6 +295,16 @@ InvertMouseInit(WDFDRIVER driver)
 
     if (!NT_SUCCESS(status)) {
         DebugPrint(("InvertMouse: CreateControlDevice failed with status 0x%x\n", status));
+        return;
+    }
+
+    status = WdfWaitLockCreate(
+        WDF_NO_OBJECT_ATTRIBUTES,
+        &global.settings_lock
+    );
+
+    if (!NT_SUCCESS(status)) {
+        DebugPrint(("InvertMouse: WdfWaitLockCreate failed with status 0x%x\n", status));
         return;
     }
 

@@ -18,6 +18,9 @@
 #define IOCTL_INVERTMOUSE_SET_SETTINGS CTL_CODE(FILE_DEVICE_MOUSE, 0x801, METHOD_BUFFERED, FILE_ANY_ACCESS)
 #define IOCTL_INVERTMOUSE_GET_VERSION CTL_CODE(FILE_DEVICE_MOUSE, 0x802, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
+constexpr int WRITE_DELAY_LONG = 1000;
+constexpr int WRITE_DELAY_SHORT = 100;
+
 typedef struct _INVERTMOUSE_SETTINGS {
     BOOLEAN enable;
     double multiplier_x;
@@ -54,7 +57,7 @@ VOID InvertMouseCallback(
     IN OUT PULONG InputDataConsumed
 );
 
-VOID WriteDelay(VOID);
+VOID WriteDelay(int delayMs);
 
 VOID DispatchPassThrough(
     _In_ WDFREQUEST Request,
