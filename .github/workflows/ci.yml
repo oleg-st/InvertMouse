@@ -12,7 +12,7 @@ jobs:
         platform: [x64, ARM64]
     runs-on: windows-2022
     env:
-      Solution_Path: src\InvertMouseDriver\InvertMouse.sln
+      Solution_Path: src\InvertMouseDriver\InvertMouseDriver.sln
 
     steps:
     - name: Check out repository code
