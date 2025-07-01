@@ -30,7 +30,17 @@ jobs:
         Configuration: ${{ matrix.configuration }}
         Platform: ${{ matrix.platform }}
 
-    - name: Upload artifacts
+    - name: Create cab
+      run: makecab /f InvertMouse_${{ matrix.platform }}.ddf
+      working-directory: src/InvertMouseDriver
+
+    - name: Upload cab
+      uses: actions/upload-artifact@v4
+      with:
+        name: InvertMouse-${{ matrix.platform }}
+        path: src/InvertMouseDriver/disk1/InvertMouseDriver_${{ matrix.platform }}.cab
+
+    - name: Upload binaries
       uses: actions/upload-artifact@v4
       with:
         name: InvertMouse-${{ matrix.platform }}
