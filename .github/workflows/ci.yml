@@ -1,0 +1,31 @@
+name: CI Build InvertMouse Driver
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        platform: [x64, ARM64]
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup NuGet
+      uses: NuGet/setup-nuget@v1
+
+    - name: Restore WDK NuGets
+      run: nuget restore packages.config -PackagesDirectory packages
+
+    - name: Build InvertMouse (${ { matrix.platform } })
+      run: msbuild InvertMouse.sln /m /p:Configuration=Release /p:Platform=${{ matrix.platform }}
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: InvertMouse-${{ matrix.platform }}
+        path: |
+          **/${{ matrix.platform }}/Release/InvertMouse/InvertMouse.sys
+          **/${{ matrix.platform }}/Release/InvertMouse/InvertMouse.inf
