@@ -9,3 +9,4 @@ src/packages/
 src/InvertMouseDriver/.vs
 src/InvertMouseDriver/x64/
 src/InvertMouseDriver/arm64/
+src/InvertMouseDriver/packages/
