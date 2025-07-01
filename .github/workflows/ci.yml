@@ -35,5 +35,5 @@ jobs:
       with:
         name: InvertMouse-${{ matrix.platform }}
         path: |
-          **/${{ matrix.platform }}/Release/InvertMouse/InvertMouse.sys
-          **/${{ matrix.platform }}/Release/InvertMouse/InvertMouse.inf
+          src/InvertMouseDriver/${{ matrix.platform }}/${{ matrix.configuration }}/InvertMouse/InvertMouse.sys
+          src/InvertMouseDriver/${{ matrix.platform }}/${{ matrix.configuration }}/InvertMouse/InvertMouse.inf
