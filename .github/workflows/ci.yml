@@ -1,6 +1,7 @@
 name: CI Build InvertMouse Driver
 
 on:
+  pull_request:
   workflow_dispatch:
 
 jobs:
