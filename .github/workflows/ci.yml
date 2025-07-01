@@ -37,7 +37,7 @@ jobs:
     - name: Upload cab
       uses: actions/upload-artifact@v4
       with:
-        name: InvertMouse-${{ matrix.platform }}
+        name: CAB-InvertMouse-${{ matrix.platform }}
         path: src/InvertMouseDriver/disk1/InvertMouseDriver_${{ matrix.platform }}.cab
 
     - name: Upload binaries
