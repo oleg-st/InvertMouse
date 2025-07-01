@@ -19,9 +19,11 @@ jobs:
 
     - name: Restore WDK NuGets
       run: nuget restore packages.config -PackagesDirectory packages
+      working-directory: src/InvertMouseDriver
 
     - name: Build InvertMouse (${ { matrix.platform } })
       run: msbuild InvertMouse.sln /m /p:Configuration=Release /p:Platform=${{ matrix.platform }}
+      working-directory: src/InvertMouseDriver
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
