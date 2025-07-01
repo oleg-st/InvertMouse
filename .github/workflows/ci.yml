@@ -6,24 +6,27 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
     strategy:
       matrix:
+        configuration: [Release]
         platform: [x64, ARM64]
+    runs-on: windows-2022
+    env:
+      Solution_Path: src\InvertMouseDriver\InvertMouse.sln
 
     steps:
-    - uses: actions/checkout@v3
+    - name: Check out repository code
+      uses: actions/checkout@v3
 
-    - name: Setup NuGet
-      uses: NuGet/setup-nuget@v1
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v1.0.2
 
-    - name: Restore WDK NuGets
-      run: nuget restore packages.config -PackagesDirectory packages
-      working-directory: src/InvertMouseDriver
-
-    - name: Build InvertMouse (${ { matrix.platform } })
-      run: msbuild InvertMouse.sln /m /p:Configuration=Release /p:Platform=${{ matrix.platform }}
-      working-directory: src/InvertMouseDriver
+    - name: Build solution
+      run: |
+        msbuild ${{ env.Solution_Path }} -p:Configuration:${{ env.Configuration }} -p:Platform:${{ env.Platform }}
+      env:
+        Configuration: ${{ matrix.configuration }}
+        Platform: ${{ matrix.platform }}
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
