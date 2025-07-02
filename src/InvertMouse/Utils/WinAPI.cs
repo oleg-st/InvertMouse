@@ -55,7 +55,55 @@ namespace InvertMouse.Utils
         public const int CURSOR_SHOWING = 0x00000001;
         public const int CURSOR_SUPPRESSED = 0x00000002;
 
+        private const int PROCESSOR_ARCHITECTURE_AMD64 = 9;
+        private const int PROCESSOR_ARCHITECTURE_ARM = 5;
+        private const int PROCESSOR_ARCHITECTURE_ARM64 = 12;
+        private const int PROCESSOR_ARCHITECTURE_IA64 = 6;
+        private const int PROCESSOR_ARCHITECTURE_INTEL = 0;
+        private const int PROCESSOR_ARCHITECTURE_UNKNOWN = 0xffff;
+
+        [DllImport(Kernel32)]
+        public static extern void GetNativeSystemInfo(ref SYSTEM_INFO lpSystemInfo);
+
+        public static string GetArchitecture()
+        {
+            var sysInfo = new SYSTEM_INFO();
+            GetNativeSystemInfo(ref sysInfo);
+
+            switch (sysInfo.wProcessorArchitecture)
+            {
+                case PROCESSOR_ARCHITECTURE_AMD64:
+                    return "x64";
+                case PROCESSOR_ARCHITECTURE_ARM64:
+                    return "arm64";
+                case PROCESSOR_ARCHITECTURE_ARM:
+                    return "arm";
+                case PROCESSOR_ARCHITECTURE_IA64:
+                    return "ia64";
+                case PROCESSOR_ARCHITECTURE_INTEL:
+                    return "x86";
+                default:
+                    return null;
+            }
+        }
+
         #region Structs
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct SYSTEM_INFO
+        {
+            public ushort wProcessorArchitecture;
+            public ushort wReserved;
+            public uint dwPageSize;
+            public IntPtr lpMinimumApplicationAddress;
+            public IntPtr lpMaximumApplicationAddress;
+            public IntPtr dwActiveProcessorMask;
+            public uint dwNumberOfProcessors;
+            public uint dwProcessorType;
+            public uint dwAllocationGranularity;
+            public ushort wProcessorLevel;
+            public ushort wProcessorRevision;
+        }
 
         [StructLayout(LayoutKind.Sequential)]
         public struct POINT

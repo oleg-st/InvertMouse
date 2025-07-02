@@ -1,12 +1,16 @@
 ﻿using InvertMouse.Inverter;
+using InvertMouse.KeyBind;
+using InvertMouse.Utils;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Windows.Forms;
-using InvertMouse.KeyBind;
-using Newtonsoft.Json;
+using System.Xml.Linq;
 using CheckState = InvertMouse.Inverter.CheckState;
 
 namespace InvertMouse
@@ -255,7 +259,7 @@ namespace InvertMouse
                 WindowState = FormWindowState.Minimized;
             }
 
-            if (!KeyBindManager.IsAdministrator())
+            if (!AdminManager.IsAdministrator())
             {
                 shieldIconPB.Visible = true;
                 var tt = new ToolTip();
@@ -283,8 +287,12 @@ namespace InvertMouse
                     startStopBtn.Enabled = false;
                     break;
                 case CheckState.Ok:
-                    stateLabel.Text =
-                        _invertMouse.IsRunning ? $"Running, delay: {_invertMouse.Delay} ms" : "Ready to run";
+                    var state = _invertMouse.IsRunning ? $"Running, delay: {_invertMouse.Delay} ms" : "Ready to run";
+                    if (!string.IsNullOrEmpty(_invertMouse.Version))
+                    {
+                        state += $" (v{_invertMouse.Version})";
+                    }
+                    stateLabel.Text = state;
                     startStopBtn.Enabled = true;
                     break;
             }
@@ -509,9 +517,9 @@ namespace InvertMouse
         private void toggleCB_CheckedChanged(object sender, EventArgs e)
         {
             _options.StartStopByKey = startStopByKeyCB.Checked;
-            if (startStopByKeyCB.Checked && !KeyBindManager.IsAdministrator())
+            if (startStopByKeyCB.Checked && !AdminManager.IsAdministrator())
             {
-                if (KeyBindManager.RestartAsAdministrator())
+                if (AdminManager.RestartAsAdministrator())
                 {
                     StopAll();
                     Environment.Exit(0);
@@ -556,6 +564,36 @@ namespace InvertMouse
         private void keyTB_MouseUp(object sender, MouseEventArgs e)
         {
             _keyBinder.MouseUp(e.Button);
+        }
+
+        private bool OpenDriver()
+        {
+            var path = Process.GetCurrentProcess().MainModule?.FileName;
+            var directoryName = Path.GetDirectoryName(path);
+            if (directoryName == null)
+            {
+                return false;
+            }
+            var exeName = Path.Combine(directoryName, "DriverInstaller.exe");
+            var startInfo = new ProcessStartInfo(exeName)
+            {
+                UseShellExecute = true
+            };
+            try
+            {
+                Process.Start(startInfo);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Cannot start {exeName}: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                return false;
+            }
+        }
+
+        private void invertMouseDriverBtn_Click(object sender, EventArgs e)
+        {
+            OpenDriver();
         }
     }
 }

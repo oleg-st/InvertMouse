@@ -6,3 +6,6 @@ obj/
 src/.vs
 src/RawAccel/wrapper/x64/
 src/packages/
+src/InvertMouseDriver/.vs
+src/InvertMouseDriver/x64/
+src/InvertMouseDriver/arm64/
