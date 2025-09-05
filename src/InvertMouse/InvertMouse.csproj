@@ -23,6 +23,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>x64</PlatformTarget>
@@ -33,6 +34,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>mouse.ico</ApplicationIcon>
@@ -62,6 +64,7 @@
     <Compile Include="Inverter\InvertMouseBase.cs" />
     <Compile Include="Inverter\InvertMouseRawAccel.cs" />
     <Compile Include="KeyBind\KeyBindManager.cs" />
+    <Compile Include="Utils\CursorTransparencyChecker.cs" />
     <Compile Include="Utils\WinAPI.cs" />
     <Compile Include="Utils\InterceptionLib.cs" />
     <Compile Include="Inverter\InvertMouseInterception.cs" />

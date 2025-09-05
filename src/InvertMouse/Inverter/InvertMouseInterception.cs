@@ -46,7 +46,8 @@ namespace InvertMouse.Inverter
             var stroke = new InterceptionLib.InterceptionMouseStroke();
             while (IsRunning)
             {
-                var device = InterceptionLib.interception_wait_with_timeout(context, 500);
+                var isActive = !WhenCursorIsHidden || IsCursorHidden();
+                var device = InterceptionLib.interception_wait_with_timeout(context, CheckDelayMs);
                 if (
                     InterceptionLib.interception_is_mouse(device) != 0 &&
                     InterceptionLib.interception_receive(context, device, ref stroke, 1) > 0
@@ -55,7 +56,7 @@ namespace InvertMouse.Inverter
                     if (
                         (stroke.flags &
                          (ushort)InterceptionLib.InterceptionMouseFlag.INTERCEPTION_MOUSE_MOVE_ABSOLUTE) == 0
-                        && (!WhenCursorIsHidden || IsCursorHidden())
+                        && isActive
                     )
                     {
                         stroke.x = (int) Math.Round(stroke.x * XMultiplier);
