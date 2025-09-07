@@ -46,7 +46,7 @@ namespace InvertMouse.Inverter
             var stroke = new InterceptionLib.InterceptionMouseStroke();
             while (IsRunning)
             {
-                var isActive = !WhenCursorIsHidden || IsCursorHidden();
+                var isActive = IsCursorSuitable();
                 var device = InterceptionLib.interception_wait_with_timeout(context, CheckDelayMs);
                 if (
                     InterceptionLib.interception_is_mouse(device) != 0 &&

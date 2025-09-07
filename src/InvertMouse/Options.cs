@@ -51,6 +51,21 @@ namespace InvertMouse
             }
         }
 
+        private bool _whenCursorIsTransparent;
+
+        public bool WhenCursorIsTransparent
+        {
+            get => _whenCursorIsTransparent;
+            set
+            {
+                if (_whenCursorIsTransparent != value)
+                {
+                    _whenCursorIsTransparent = value;
+                    OnChanged();
+                }
+            }
+        }
+
         private bool _xAxis;
 
         public bool XAxis

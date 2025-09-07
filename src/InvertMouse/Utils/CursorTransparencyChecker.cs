@@ -114,7 +114,7 @@ namespace InvertMouse.Utils
                     var w = bm.bmWidth;
                     var h2 = bm.bmHeight;
                     // empty cursor
-                    if (w <= 0 || h2 <= 0 || GetBitmapBytes(iconInfo.hbmMask, w, h2, 1))
+                    if (w <= 0 || h2 <= 0 || !GetBitmapBytes(iconInfo.hbmMask, w, h2, 1))
                     {
                         return true;
                     }

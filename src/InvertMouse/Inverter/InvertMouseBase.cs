@@ -1,5 +1,5 @@
-﻿using System;
-using InvertMouse.Utils;
+﻿using InvertMouse.Utils;
+using System;
 using System.Runtime.InteropServices;
 using System.Threading;
 
@@ -14,6 +14,7 @@ namespace InvertMouse.Inverter
         public string Error { get; protected set; }
         public double Delay { get; protected set; }
         public bool WhenCursorIsHidden { get; set; }
+        public bool WhenCursorIsTransparent { get; set; }
 
         public decimal XMultiplier { get; set; }
         public decimal YMultiplier { get; set; }
@@ -32,7 +33,41 @@ namespace InvertMouse.Inverter
                 // fails on secure desktop, i.e. in UAC
                 return false;
             }
-            return (cursorInfo.flags & WinAPI.CURSOR_SHOWING) == 0 || _cursorTransparencyChecker.IsCursorFullyTransparent(cursorInfo.hCursor);
+            return (cursorInfo.flags & WinAPI.CURSOR_SHOWING) == 0;
+        }
+
+        protected bool IsCursorTransparent()
+        {
+            var cursorInfo = new WinAPI.CURSORINFO { cbSize = Marshal.SizeOf(typeof(WinAPI.CURSORINFO)) };
+            if (!WinAPI.GetCursorInfo(ref cursorInfo))
+            {
+                // fails on secure desktop, i.e. in UAC
+                return false;
+            }
+            return (cursorInfo.flags & WinAPI.CURSOR_SHOWING) != 0 && _cursorTransparencyChecker.IsCursorFullyTransparent(cursorInfo.hCursor);
+        }
+
+        protected bool IsCursorSuitable()
+        {
+            // always
+            if (!WhenCursorIsHidden && !WhenCursorIsTransparent)
+            {
+                return true;
+            }
+
+            // hidden
+            if (WhenCursorIsHidden && IsCursorHidden())
+            {
+                return true;
+            }
+
+            // transparent
+            if (WhenCursorIsTransparent && IsCursorTransparent())
+            {
+                return true;
+            }
+
+            return false;
         }
 
         protected abstract void Worker();
