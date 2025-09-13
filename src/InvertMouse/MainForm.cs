@@ -233,6 +233,7 @@ namespace InvertMouse
             }
 
             cursorHiddenCB.Checked = _options.WhenCursorIsHidden;
+            cursorTransparentCB.Checked = _options.WhenCursorIsTransparent;
             xAxisCB.Checked = _options.XAxis;
             yAxisCB.Checked = _options.YAxis;
             ResetAxisMultiplier(xAxisCustomTB);
@@ -318,6 +319,7 @@ namespace InvertMouse
             }
 
             _invertMouse.WhenCursorIsHidden = _options.WhenCursorIsHidden;
+            _invertMouse.WhenCursorIsTransparent = _options.WhenCursorIsTransparent;
             _invertMouse.XMultiplier = _options.XAxis ? _options.XMultiplier : InvertMouseBase.IdentityMultiplier;
             _invertMouse.YMultiplier = _options.YAxis ? _options.YMultiplier : InvertMouseBase.IdentityMultiplier;
         }
@@ -604,6 +606,12 @@ namespace InvertMouse
         private void invertMouseDriverBtn_Click(object sender, EventArgs e)
         {
             OpenDriver();
+        }
+
+        private void cursorTransparentCB_CheckedChanged(object sender, EventArgs e)
+        {
+            _options.WhenCursorIsTransparent = cursorTransparentCB.Checked;
+            SetInvertMouseOptions();
         }
     }
 }

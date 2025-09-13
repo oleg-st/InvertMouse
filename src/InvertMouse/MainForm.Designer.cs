@@ -52,6 +52,7 @@ namespace InvertMouse
             this.startStopKeyTB = new System.Windows.Forms.TextBox();
             this.shieldIconPB = new System.Windows.Forms.PictureBox();
             this.invertMouseDriverBtn = new System.Windows.Forms.Button();
+            this.cursorTransparentCB = new System.Windows.Forms.CheckBox();
             this.contextMenuStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.shieldIconPB)).BeginInit();
             this.SuspendLayout();
@@ -95,7 +96,7 @@ namespace InvertMouse
             this.yAxisCB.AutoSize = true;
             this.yAxisCB.Checked = true;
             this.yAxisCB.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.yAxisCB.Location = new System.Drawing.Point(16, 203);
+            this.yAxisCB.Location = new System.Drawing.Point(16, 235);
             this.yAxisCB.Name = "yAxisCB";
             this.yAxisCB.Size = new System.Drawing.Size(70, 25);
             this.yAxisCB.TabIndex = 4;
@@ -106,7 +107,7 @@ namespace InvertMouse
             // xAxisCB
             // 
             this.xAxisCB.AutoSize = true;
-            this.xAxisCB.Location = new System.Drawing.Point(16, 234);
+            this.xAxisCB.Location = new System.Drawing.Point(16, 266);
             this.xAxisCB.Name = "xAxisCB";
             this.xAxisCB.Size = new System.Drawing.Size(70, 25);
             this.xAxisCB.TabIndex = 6;
@@ -166,7 +167,7 @@ namespace InvertMouse
             // minimizeToTrayCB
             // 
             this.minimizeToTrayCB.AutoSize = true;
-            this.minimizeToTrayCB.Location = new System.Drawing.Point(16, 265);
+            this.minimizeToTrayCB.Location = new System.Drawing.Point(16, 297);
             this.minimizeToTrayCB.Name = "minimizeToTrayCB";
             this.minimizeToTrayCB.Size = new System.Drawing.Size(142, 25);
             this.minimizeToTrayCB.TabIndex = 8;
@@ -176,7 +177,7 @@ namespace InvertMouse
             // 
             // yAxisCustomTB
             // 
-            this.yAxisCustomTB.Location = new System.Drawing.Point(176, 200);
+            this.yAxisCustomTB.Location = new System.Drawing.Point(176, 232);
             this.yAxisCustomTB.Name = "yAxisCustomTB";
             this.yAxisCustomTB.Size = new System.Drawing.Size(55, 29);
             this.yAxisCustomTB.TabIndex = 5;
@@ -186,7 +187,7 @@ namespace InvertMouse
             // 
             // yAxisCustomLabel
             // 
-            this.yAxisCustomLabel.Location = new System.Drawing.Point(92, 204);
+            this.yAxisCustomLabel.Location = new System.Drawing.Point(92, 236);
             this.yAxisCustomLabel.Name = "yAxisCustomLabel";
             this.yAxisCustomLabel.Size = new System.Drawing.Size(81, 21);
             this.yAxisCustomLabel.TabIndex = 5;
@@ -194,7 +195,7 @@ namespace InvertMouse
             // 
             // xAxisCustomLabel
             // 
-            this.xAxisCustomLabel.Location = new System.Drawing.Point(92, 235);
+            this.xAxisCustomLabel.Location = new System.Drawing.Point(92, 267);
             this.xAxisCustomLabel.Name = "xAxisCustomLabel";
             this.xAxisCustomLabel.Size = new System.Drawing.Size(81, 21);
             this.xAxisCustomLabel.TabIndex = 7;
@@ -202,7 +203,7 @@ namespace InvertMouse
             // 
             // xAxisCustomTB
             // 
-            this.xAxisCustomTB.Location = new System.Drawing.Point(176, 231);
+            this.xAxisCustomTB.Location = new System.Drawing.Point(176, 263);
             this.xAxisCustomTB.Name = "xAxisCustomTB";
             this.xAxisCustomTB.Size = new System.Drawing.Size(55, 29);
             this.xAxisCustomTB.TabIndex = 7;
@@ -212,7 +213,7 @@ namespace InvertMouse
             // startMinimizedCB
             // 
             this.startMinimizedCB.AutoSize = true;
-            this.startMinimizedCB.Location = new System.Drawing.Point(164, 265);
+            this.startMinimizedCB.Location = new System.Drawing.Point(164, 297);
             this.startMinimizedCB.Name = "startMinimizedCB";
             this.startMinimizedCB.Size = new System.Drawing.Size(138, 25);
             this.startMinimizedCB.TabIndex = 9;
@@ -223,7 +224,7 @@ namespace InvertMouse
             // startStopByKeyCB
             // 
             this.startStopByKeyCB.AutoSize = true;
-            this.startStopByKeyCB.Location = new System.Drawing.Point(16, 296);
+            this.startStopByKeyCB.Location = new System.Drawing.Point(16, 328);
             this.startStopByKeyCB.Name = "startStopByKeyCB";
             this.startStopByKeyCB.Size = new System.Drawing.Size(146, 25);
             this.startStopByKeyCB.TabIndex = 11;
@@ -234,7 +235,7 @@ namespace InvertMouse
             // startStopKeyTB
             // 
             this.startStopKeyTB.BackColor = System.Drawing.SystemColors.Window;
-            this.startStopKeyTB.Location = new System.Drawing.Point(16, 327);
+            this.startStopKeyTB.Location = new System.Drawing.Point(16, 359);
             this.startStopKeyTB.Name = "startStopKeyTB";
             this.startStopKeyTB.ReadOnly = true;
             this.startStopKeyTB.ShortcutsEnabled = false;
@@ -249,7 +250,7 @@ namespace InvertMouse
             // shieldIconPB
             // 
             this.shieldIconPB.Image = ((System.Drawing.Image)(resources.GetObject("shieldIconPB.Image")));
-            this.shieldIconPB.Location = new System.Drawing.Point(161, 301);
+            this.shieldIconPB.Location = new System.Drawing.Point(161, 333);
             this.shieldIconPB.Name = "shieldIconPB";
             this.shieldIconPB.Size = new System.Drawing.Size(16, 16);
             this.shieldIconPB.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
@@ -260,9 +261,9 @@ namespace InvertMouse
             // 
             // invertMouseDriverBtn
             // 
-            this.invertMouseDriverBtn.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.invertMouseDriverBtn.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.invertMouseDriverBtn.Location = new System.Drawing.Point(16, 364);
+            this.invertMouseDriverBtn.Location = new System.Drawing.Point(16, 396);
             this.invertMouseDriverBtn.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.invertMouseDriverBtn.Name = "invertMouseDriverBtn";
             this.invertMouseDriverBtn.Size = new System.Drawing.Size(285, 35);
@@ -271,11 +272,22 @@ namespace InvertMouse
             this.invertMouseDriverBtn.UseVisualStyleBackColor = true;
             this.invertMouseDriverBtn.Click += new System.EventHandler(this.invertMouseDriverBtn_Click);
             // 
+            // cursorTransparentCB
+            // 
+            this.cursorTransparentCB.AutoSize = true;
+            this.cursorTransparentCB.Location = new System.Drawing.Point(16, 203);
+            this.cursorTransparentCB.Name = "cursorTransparentCB";
+            this.cursorTransparentCB.Size = new System.Drawing.Size(217, 25);
+            this.cursorTransparentCB.TabIndex = 14;
+            this.cursorTransparentCB.Text = "When cursor is transparent";
+            this.cursorTransparentCB.UseVisualStyleBackColor = true;
+            this.cursorTransparentCB.CheckedChanged += new System.EventHandler(this.cursorTransparentCB_CheckedChanged);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 21F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(311, 407);
+            this.ClientSize = new System.Drawing.Size(311, 439);
             this.Controls.Add(this.invertMouseDriverBtn);
             this.Controls.Add(this.shieldIconPB);
             this.Controls.Add(this.startStopKeyTB);
@@ -291,6 +303,7 @@ namespace InvertMouse
             this.Controls.Add(this.xAxisCB);
             this.Controls.Add(this.yAxisCB);
             this.Controls.Add(this.cursorHiddenCB);
+            this.Controls.Add(this.cursorTransparentCB);
             this.Controls.Add(this.stateLabel);
             this.Controls.Add(this.startStopBtn);
             this.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
@@ -334,6 +347,7 @@ namespace InvertMouse
         private System.Windows.Forms.TextBox startStopKeyTB;
         private System.Windows.Forms.PictureBox shieldIconPB;
         private System.Windows.Forms.Button invertMouseDriverBtn;
+        private System.Windows.Forms.CheckBox cursorTransparentCB;
     }
 }
 
