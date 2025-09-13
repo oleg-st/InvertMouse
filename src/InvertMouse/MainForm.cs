@@ -4,13 +4,11 @@ using InvertMouse.Utils;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Windows.Forms;
-using System.Xml.Linq;
 using CheckState = InvertMouse.Inverter.CheckState;
 
 namespace InvertMouse
@@ -28,9 +26,21 @@ namespace InvertMouse
 
         private Options _options;
 
+        private static readonly DriverType[] _driverTypes = {
+            DriverType.InvertMouse,
+            DriverType.Interception,
+            DriverType.RawAccel,
+        };
+
         public MainForm()
         {
             InitializeComponent();
+
+            foreach (var driverType in _driverTypes)
+            {
+                driverComboBox.Items.Add(driverType.ToString());
+            }
+
             _serializer = new JsonSerializer
             {
                 Formatting = Formatting.Indented
@@ -153,7 +163,7 @@ namespace InvertMouse
 
         private void Detect()
         {
-            foreach (var driverType in (DriverType[])Enum.GetValues(typeof(DriverType)))
+            foreach (var driverType in _driverTypes)
             {
                 var invertMouse = GetInvertMouse(driverType);
                 if (invertMouse.State == CheckState.Ok)
@@ -378,12 +388,12 @@ namespace InvertMouse
 
             _options.DriverType = driverType;
             UpdateState();
-            driverComboBox.SelectedIndex = (int)driverType;
+            driverComboBox.SelectedIndex = Array.IndexOf(_driverTypes, driverType);
         }
 
         private void driverComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            SetDriver((DriverType)driverComboBox.SelectedIndex);
+            SetDriver(_driverTypes[driverComboBox.SelectedIndex]);
         }
 
         private void UpdateMultiplierControls()

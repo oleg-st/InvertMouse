@@ -157,10 +157,6 @@ namespace InvertMouse
             | System.Windows.Forms.AnchorStyles.Right)));
             this.driverComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.driverComboBox.FormattingEnabled = true;
-            this.driverComboBox.Items.AddRange(new object[] {
-            "Interception",
-            "RawAccel",
-            "InvertMouse"});
             this.driverComboBox.Location = new System.Drawing.Point(16, 33);
             this.driverComboBox.Name = "driverComboBox";
             this.driverComboBox.Size = new System.Drawing.Size(282, 29);
