@@ -106,7 +106,7 @@ namespace DriverInstaller.Utils
         private void AddService(IntPtr scm)
         {
             var srv = CreateService(
-                scm, DriverDestPath, DriverDestPath, SERVICE_ALL_ACCESS, SERVICE_KERNEL_DRIVER,
+                scm, DriverName, DriverName, SERVICE_ALL_ACCESS, SERVICE_KERNEL_DRIVER,
                 SERVICE_DEMAND_START, SERVICE_ERROR_NORMAL, DriverDestPath,
                 null, IntPtr.Zero, null, null, null
             );
