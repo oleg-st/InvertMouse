@@ -3,7 +3,7 @@ Adds the ability to invert the mouse Y-axis in games that lack this feature, suc
 
 # Usage
 
-1. Install [Raw Accel v1.6.0](https://github.com/a1xd/rawaccel) or [Interception](https://github.com/oblitum/Interception) driver. Reboot.
+1. Install [Raw Accel v1.6.0](https://github.com/a1xd/rawaccel) (newer versions are not supported) or [Interception](https://github.com/oblitum/Interception) driver. Reboot.
 2. Run [InvertMouse](https://github.com/oleg-st/InvertMouse/releases/latest)
 
 # Requirements
