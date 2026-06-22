@@ -1,0 +1,46 @@
+[Version]
+Signature   = "$Windows NT$"
+Class       = Mouse
+ClassGuid   = {4D36E96F-E325-11CE-BFC1-08002BE10318}
+Provider    = "Oleg Stepanischev"
+DriverVer   = 06/21/2025,1.0.0.0
+CatalogFile = InvertMouse.cat
+PnpLockdown = 1
+
+[Manufacturer]
+%ManufacturerName% = InvertMouseDevices,NTamd64,NTarm64
+
+[InvertMouseDevices.NTamd64]
+%DeviceName% = InvertMouse_Install, HID_DEVICE_SYSTEM_MOUSE
+[InvertMouseDevices.NTarm64]
+%DeviceName% = InvertMouse_Install, HID_DEVICE_SYSTEM_MOUSE
+[InvertMouse_Install]
+CopyFiles = @InvertMouse.sys
+AddReg    = UpperFilter_AddReg
+
+[DestinationDirs]
+DefaultDestDir = 12 ; \System32\Drivers
+
+[InvertMouse_Install.Services]
+AddService = InvertMouse, 0x00000002, InvertMouse_Service_Inst
+AddReg = UpperFilter_AddReg
+
+[InvertMouse_Service_Inst]
+DisplayName    = "InvertMouse Driver"
+ServiceType    = 1 ; SERVICE_KERNEL_DRIVER
+StartType      = 3 ; SERVICE_DEMAND_START
+ErrorControl   = 1
+ServiceBinary  = %12%\InvertMouse.sys
+
+[UpperFilter_AddReg]
+HKR,,"UpperFilters",0x00010008,"InvertMouse"
+
+[Strings]
+ManufacturerName = "InvertMouse Project"
+DeviceName = "InvertMouse HID Filter"
+
+[SourceDisksFiles]
+InvertMouse.sys = 1
+
+[SourceDisksNames]
+1 = "InvertMouse Driver Installation Disk",,,

@@ -51,6 +51,7 @@ namespace InvertMouse
             this.startStopByKeyCB = new System.Windows.Forms.CheckBox();
             this.startStopKeyTB = new System.Windows.Forms.TextBox();
             this.shieldIconPB = new System.Windows.Forms.PictureBox();
+            this.invertMouseDriverBtn = new System.Windows.Forms.Button();
             this.cursorTransparentCB = new System.Windows.Forms.CheckBox();
             this.contextMenuStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.shieldIconPB)).BeginInit();
@@ -157,9 +158,6 @@ namespace InvertMouse
             | System.Windows.Forms.AnchorStyles.Right)));
             this.driverComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.driverComboBox.FormattingEnabled = true;
-            this.driverComboBox.Items.AddRange(new object[] {
-            "Interception",
-            "RawAccel"});
             this.driverComboBox.Location = new System.Drawing.Point(16, 33);
             this.driverComboBox.Name = "driverComboBox";
             this.driverComboBox.Size = new System.Drawing.Size(282, 29);
@@ -261,6 +259,19 @@ namespace InvertMouse
             this.shieldIconPB.Visible = false;
             this.shieldIconPB.WaitOnLoad = true;
             // 
+            // invertMouseDriverBtn
+            // 
+            this.invertMouseDriverBtn.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.invertMouseDriverBtn.Location = new System.Drawing.Point(16, 396);
+            this.invertMouseDriverBtn.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.invertMouseDriverBtn.Name = "invertMouseDriverBtn";
+            this.invertMouseDriverBtn.Size = new System.Drawing.Size(285, 35);
+            this.invertMouseDriverBtn.TabIndex = 14;
+            this.invertMouseDriverBtn.Text = "InvertMouse driver";
+            this.invertMouseDriverBtn.UseVisualStyleBackColor = true;
+            this.invertMouseDriverBtn.Click += new System.EventHandler(this.invertMouseDriverBtn_Click);
+            // 
             // cursorTransparentCB
             // 
             this.cursorTransparentCB.AutoSize = true;
@@ -276,8 +287,8 @@ namespace InvertMouse
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 21F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(311, 402);
-            this.Controls.Add(this.cursorTransparentCB);
+            this.ClientSize = new System.Drawing.Size(311, 439);
+            this.Controls.Add(this.invertMouseDriverBtn);
             this.Controls.Add(this.shieldIconPB);
             this.Controls.Add(this.startStopKeyTB);
             this.Controls.Add(this.startStopByKeyCB);
@@ -292,6 +303,7 @@ namespace InvertMouse
             this.Controls.Add(this.xAxisCB);
             this.Controls.Add(this.yAxisCB);
             this.Controls.Add(this.cursorHiddenCB);
+            this.Controls.Add(this.cursorTransparentCB);
             this.Controls.Add(this.stateLabel);
             this.Controls.Add(this.startStopBtn);
             this.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
@@ -334,6 +346,7 @@ namespace InvertMouse
         private System.Windows.Forms.CheckBox startStopByKeyCB;
         private System.Windows.Forms.TextBox startStopKeyTB;
         private System.Windows.Forms.PictureBox shieldIconPB;
+        private System.Windows.Forms.Button invertMouseDriverBtn;
         private System.Windows.Forms.CheckBox cursorTransparentCB;
     }
 }

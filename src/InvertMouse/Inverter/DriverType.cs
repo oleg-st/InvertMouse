@@ -4,5 +4,6 @@
     {
         Interception,
         RawAccel,
+        InvertMouse,
     }
 }

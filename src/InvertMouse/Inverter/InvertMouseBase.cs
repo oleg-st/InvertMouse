@@ -22,6 +22,7 @@ namespace InvertMouse.Inverter
         public const decimal InvertMultiplier = -1;
         public const decimal IdentityMultiplier = 1;
 
+        public string Version { get; protected set; }
         private readonly CursorTransparencyChecker _cursorTransparencyChecker = new CursorTransparencyChecker();
         protected const int CheckDelayMs = 50;
 

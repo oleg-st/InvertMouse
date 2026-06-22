@@ -1,9 +1,12 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.31112.23
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36127.28
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InvertMouse", "InvertMouse\InvertMouse.csproj", "{00B59BF5-249A-41DD-8FD1-E30D641F4356}"
+	ProjectSection(ProjectDependencies) = postProject
+		{F26DCAF1-F468-4DF5-ADC2-ADBFFC50BB40} = {F26DCAF1-F468-4DF5-ADC2-ADBFFC50BB40}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "common", "RawAccel\common\common.vcxitems", "{24B4226F-1461-408F-A1A4-1371C97153EA}"
 EndProject
@@ -11,11 +14,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "RawAccel", "RawAccel", "{70
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wrapper", "RawAccel\wrapper\wrapper.vcxproj", "{28A3656F-A1DE-405C-B547-191C32EC555F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DriverInstaller", "DriverInstaller\DriverInstaller.csproj", "{F26DCAF1-F468-4DF5-ADC2-ADBFFC50BB40}"
+EndProject
 Global
-	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		RawAccel\common\common.vcxitems*{24b4226f-1461-408f-a1a4-1371c97153ea}*SharedItemsImports = 9
-		RawAccel\common\common.vcxitems*{28a3656f-a1de-405c-b547-191c32ec555f}*SharedItemsImports = 4
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Debug|x64 = Debug|x64
@@ -37,6 +38,14 @@ Global
 		{28A3656F-A1DE-405C-B547-191C32EC555F}.Release|Any CPU.ActiveCfg = Release|x64
 		{28A3656F-A1DE-405C-B547-191C32EC555F}.Release|x64.ActiveCfg = Release|x64
 		{28A3656F-A1DE-405C-B547-191C32EC555F}.Release|x64.Build.0 = Release|x64
+		{F26DCAF1-F468-4DF5-ADC2-ADBFFC50BB40}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F26DCAF1-F468-4DF5-ADC2-ADBFFC50BB40}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F26DCAF1-F468-4DF5-ADC2-ADBFFC50BB40}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{F26DCAF1-F468-4DF5-ADC2-ADBFFC50BB40}.Debug|x64.Build.0 = Debug|Any CPU
+		{F26DCAF1-F468-4DF5-ADC2-ADBFFC50BB40}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F26DCAF1-F468-4DF5-ADC2-ADBFFC50BB40}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F26DCAF1-F468-4DF5-ADC2-ADBFFC50BB40}.Release|x64.ActiveCfg = Release|Any CPU
+		{F26DCAF1-F468-4DF5-ADC2-ADBFFC50BB40}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -47,5 +56,9 @@ Global
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {2E5CC128-975C-447A-9364-3B7DEE367D1A}
+	EndGlobalSection
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		RawAccel\common\common.vcxitems*{24b4226f-1461-408f-a1a4-1371c97153ea}*SharedItemsImports = 9
+		RawAccel\common\common.vcxitems*{28a3656f-a1de-405c-b547-191c32ec555f}*SharedItemsImports = 4
 	EndGlobalSection
 EndGlobal
